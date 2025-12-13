@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Prijava - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg">
+            <div class="card-body p-5">
+                <div class="text-center mb-4">
+                    <i class="bi bi-bank2 text-primary" style="font-size: 4rem;"></i>
+                    <h2 class="mt-3">Slovenia Bank</h2>
+                    <p class="text-muted">Prijavite se v svoj račun</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label">ID Stranke</label>
+                        <input type="text" class="form-control form-control-lg" id="user_id" name="user_id" 
+                               placeholder="Vnesite ID stranke ali 'admin'" required>
+                        <div class="form-text">Uporabite 'admin' za administratorski dostop</div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Prijava
+                        </button>
+                    </div>
+
+                    <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">
+                        Demo prijava - Uporabite katerokoli ID stranko iz baze (npr. 1, 2, 3...)
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const userId = document.getElementById('user_id').value;
+    const errorDiv = document.getElementById('loginError');
+    
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            window.location.href = data.redirect;
+        } else {
+            errorDiv.textContent = data.message;
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorDiv.textContent = 'Napaka pri prijavi. Poskusite znova.';
+        errorDiv.classList.remove('d-none');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Transakcije - Admin - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4"><i class="bi bi-arrow-left-right"></i> Vse transakcije</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-sm">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tip</th>
+                            <th>Pošiljatelj</th>
+                            <th>Prejemnik</th>
+                            <th>Znesek</th>
+                            <th>Čas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trans in transactions %}
+                        <tr>
+                            <td>{{ trans.id_transakcije }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if trans.tip == 'polog' %}bg-success
+                                    {% elif trans.tip == 'dvig' %}bg-warning
+                                    {% elif trans.tip == 'nakazilo' %}bg-primary
+                                    {% else %}bg-info{% endif %}">
+                                    {{ trans.tip }}
+                                </span>
+                            </td>
+                            <td><small>{{ trans.posilja or '-' }}</small></td>
+                            <td><small>{{ trans.prejema or '-' }}</small></td>
+                            <td>{{ trans.znesek | centi_v_eure }} €</td>
+                            <td><small>{{ trans.cas | format_datum }}</small></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

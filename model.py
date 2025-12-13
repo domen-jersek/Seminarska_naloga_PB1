@@ -8,10 +8,26 @@
 import csv
 import sqlite3 as dbapi
 from dataclasses import dataclass, field
+import threading
 
 
-conn = dbapi.connect('Banka.db')
-conn.execute("PRAGMA foreign_keys = ON;")
+# Thread-local storage za database povezave
+_thread_local = threading.local()
+
+
+def get_connection():
+    """
+    Dobi thread-safe database povezavo.
+    Vsak thread ima svojo povezavo.
+    """
+    if not hasattr(_thread_local, 'conn'):
+        _thread_local.conn = dbapi.connect('Banka.db', check_same_thread=False)
+        _thread_local.conn.execute("PRAGMA foreign_keys = ON;")
+    return _thread_local.conn
+
+
+# Backwards compatibility - za obstojočo kodo
+conn = get_connection()
 
 
 class Kazalec:
@@ -26,7 +42,7 @@ class Kazalec:
         Če kazalec ni podan, odpre novega, sicer uporabi podanega.
         """
         if cur is None:
-            self.cur = conn.cursor()
+            self.cur = get_connection().cursor()
             self.close = True
         else:
             self.cur = cur
@@ -94,15 +110,23 @@ class Entiteta:
     def __bool__(self):
         """
         Pretvorba v logično vrednost.
+        Preveri, če je primarni ključ (prvi atribut) nastavljen.
         """
-        return getattr(self, self.IME) is not None
+        # Dobi ime prvega polja iz dataclass
+        if hasattr(self, '__dataclass_fields__'):
+            first_field = next(iter(self.__dataclass_fields__))
+            return getattr(self, first_field) is not None
+        return True
 
     def __str__(self):
         """
         Znakovna predstavitev.
         """
-        return getattr(self, self.IME) if self \
-            else f"<entiteta tipa {self.__class__}>"
+        if hasattr(self, '__dataclass_fields__'):
+            first_field = next(iter(self.__dataclass_fields__))
+            value = getattr(self, first_field)
+            return str(value) if value is not None else f"<entiteta tipa {self.__class__}>"
+        return f"<entiteta tipa {self.__class__}>"
 
     def __init_subclass__(cls, /, **kwargs):
         """
@@ -369,7 +393,7 @@ def ustvari_bazo(pobrisi=False, cur=None):
     """
     with Kazalec(cur) as cur:
         try:
-            with conn:
+            with get_connection():
                 cur.execute("PRAGMA foreign_keys = OFF;")
                 if pobrisi:
                     pobrisi_tabele(cur=cur)
@@ -382,7 +406,7 @@ def ustvari_prazno_bazo():
     """
     Ustvari vse tabele v bazi 'Banka.db' — brez uvoza podatkov.
     """
-    with conn:  # auto-commit
+    with get_connection():  # auto-commit
         ustvari_tabele()
     print("✅ Prazna baza 'Banka.db' z vsemi tabelami je ustvarjena.")
 

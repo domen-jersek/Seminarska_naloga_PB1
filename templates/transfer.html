@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Nakazilo - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-arrow-left-right"></i> Novo nakazilo</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form id="transferForm">
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Z računa</label>
+                            <select class="form-select form-select-lg" name="from_iban" id="from_iban" required>
+                                <option value="">Izberite račun...</option>
+                                {% for racun in racuni %}
+                                <option value="{{ racun.IBAN }}" data-balance="{{ racun.stanje }}">
+                                    {{ racun.IBAN | format_iban }} - {{ racun.stanje | centi_v_eure }} €
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Na račun (IBAN)</label>
+                            <input type="text" class="form-control form-control-lg" name="to_iban" 
+                                   placeholder="SI56 1234 5678 9012 345" required>
+                            <div class="form-text">Vnesite IBAN računa prejemnika</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Znesek (EUR)</label>
+                            <input type="number" class="form-control form-control-lg" name="amount" 
+                                   step="0.01" min="0.01" placeholder="0.00" required>
+                            <div id="balanceInfo" class="form-text"></div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Opomba:</strong> Nakazilo bo izvedeno takoj. Preverite podatke pred potrditvijo.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send"></i> Izvedi nakazilo
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                Prekliči
+                            </a>
+                        </div>
+                    </form>
+
+                    <div id="resultMessage" class="mt-3"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const fromSelect = document.getElementById('from_iban');
+const balanceInfo = document.getElementById('balanceInfo');
+
+fromSelect.addEventListener('change', (e) => {
+    const option = e.target.options[e.target.selectedIndex];
+    const balance = option.dataset.balance;
+    if (balance) {
+        balanceInfo.textContent = `Razpoložljivo stanje: ${(balance / 100).toFixed(2)} €`;
+    }
+});
+
+document.getElementById('transferForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const resultDiv = document.getElementById('resultMessage');
+    
+    try {
+        const response = await fetch('/transfer', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                from_iban: formData.get('from_iban'),
+                to_iban: formData.get('to_iban'),
+                amount: formData.get('amount')
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> ${data.message}
+                </div>
+            `;
+            setTimeout(() => {
+                window.location.href = '{{ url_for("dashboard") }}';
+            }, 2000);
+        } else {
+            resultDiv.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> ${data.message}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-danger">
+                <i class="bi bi-x-circle"></i> Napaka pri izvedbi nakazila
+            </div>
+        `;
+    }
+});
+</script>
+{% endblock %}

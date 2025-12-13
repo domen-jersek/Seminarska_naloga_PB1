@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Račun {{ racun.IBAN }} - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('dashboard') }}">Nadzorna plošča</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('accounts') }}">Računi</a></li>
+            <li class="breadcrumb-item active">{{ racun.IBAN | format_iban }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Transakcijski račun</h5>
+                    <p class="text-muted mb-3">{{ racun.IBAN | format_iban }}</p>
+                    
+                    <h2 class="mb-3">{{ racun.stanje | centi_v_eure }} €</h2>
+                    
+                    {% if paket %}
+                    <div class="mb-3">
+                        <span class="badge bg-primary">{{ paket.tip }}</span>
+                        <small class="text-muted ms-2">
+                            Dnevni limit: {{ paket.dnevni_limit | centi_v_eure }} €
+                        </small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">Hitri akcije</h6>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#depositModal">
+                            <i class="bi bi-plus-circle"></i> Polog
+                        </button>
+                        <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                            <i class="bi bi-dash-circle"></i> Dvig
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> Zgodovina transakcij</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Tip</th>
+                            <th>Od/Za</th>
+                            <th class="text-end">Znesek</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trans in transactions %}
+                        <tr>
+                            <td><small>{{ trans.cas | format_datum }}</small></td>
+                            <td>
+                                {% if trans.tip == 'polog' %}
+                                <span class="badge bg-success">Polog</span>
+                                {% elif trans.tip == 'dvig' %}
+                                <span class="badge bg-warning">Dvig</span>
+                                {% elif trans.tip == 'nakazilo' %}
+                                <span class="badge bg-primary">Nakazilo</span>
+                                {% else %}
+                                <span class="badge bg-info">{{ trans.tip }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small>
+                                {% if trans.posilja and trans.posilja != racun.IBAN %}
+                                    Od: {{ trans.posilja }}
+                                {% elif trans.prejema and trans.prejema != racun.IBAN %}
+                                    Za: {{ trans.prejema }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                                </small>
+                            </td>
+                            <td class="text-end">
+                                <strong class="
+                                    {% if trans.tip == 'polog' or (trans.tip == 'nakazilo' and trans.prejema == racun.IBAN) %}
+                                    text-success
+                                    {% else %}
+                                    text-danger
+                                    {% endif %}">
+                                    {% if trans.tip == 'polog' or (trans.tip == 'nakazilo' and trans.prejema == racun.IBAN) %}
+                                    +
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                    {{ trans.znesek | centi_v_eure }} €
+                                </strong>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if transactions | length == 0 %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                Ni transakcij
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Deposit Modal -->
+<div class="modal fade" id="depositModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Polog na {{ racun.IBAN | format_iban }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="depositForm">
+                <input type="hidden" name="iban" value="{{ racun.IBAN }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Znesek (EUR)</label>
+                        <input type="number" class="form-control" name="amount" step="0.01" min="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-success">Potrdi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal fade" id="withdrawModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Dvig z {{ racun.IBAN | format_iban }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="withdrawForm">
+                <input type="hidden" name="iban" value="{{ racun.IBAN }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Znesek (EUR)</label>
+                        <input type="number" class="form-control" name="amount" step="0.01" min="0.01" 
+                               max="{{ racun.stanje / 100 }}" required>
+                        <div class="form-text">Razpoložljivo: {{ racun.stanje | centi_v_eure }} €</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-warning">Potrdi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('depositForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('/deposit', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                iban: formData.get('iban'),
+                amount: formData.get('amount')
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Napaka pri izvedbi pologa');
+    }
+});
+
+document.getElementById('withdrawForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('/withdraw', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                iban: formData.get('iban'),
+                amount: formData.get('amount')
+            })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert('Napaka pri izvedbi dviga');
+    }
+});
+</script>
+{% endblock %}

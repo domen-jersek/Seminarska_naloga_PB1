@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Stranke - Admin - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4"><i class="bi bi-people"></i> Vse stranke</h1>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Ime</th>
+                            <th>Priimek</th>
+                            <th>Naslov</th>
+                            <th>Datum rojstva</th>
+                            <th>Št. računov</th>
+                            <th>Skupno stanje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stranka in stranke %}
+                        <tr>
+                            <td>{{ stranka.id_stranke }}</td>
+                            <td>{{ stranka.ime }}</td>
+                            <td>{{ stranka.priimek }}</td>
+                            <td>{{ stranka.naslov }}</td>
+                            <td>{{ stranka.datum_rojstva }}</td>
+                            <td>{{ stranka.stevilo_racunov }}</td>
+                            <td>{{ stranka.skupno_stanje | centi_v_eure }} €</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

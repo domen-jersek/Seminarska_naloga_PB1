@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <h1 class="mb-4"><i class="bi bi-speedometer2"></i> Admin Dashboard</h1>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 opacity-75">Stranke</h6>
+                    <h2 class="card-title mb-0">{{ stats.total_customers }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 opacity-75">Računi</h6>
+                    <h2 class="card-title mb-0">{{ stats.total_accounts }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 opacity-75">Skupno stanje</h6>
+                    <h2 class="card-title mb-0">{{ stats.total_balance | centi_v_eure }} €</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body">
+                    <h6 class="card-subtitle mb-2 opacity-75">Transakcije danes</h6>
+                    <h2 class="card-title mb-0">{{ stats.transactions_today }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5><i class="bi bi-bar-chart"></i> Statistika</h5>
+                    <hr>
+                    <p><strong>Skupno transakcij:</strong> {{ stats.total_transactions }}</p>
+                    <p><strong>Povprečno stanje:</strong> {{ stats.avg_balance | centi_v_eure }} €</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5><i class="bi bi-lightning"></i> Hitre povezave</h5>
+                    <hr>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin_customers') }}" class="btn btn-primary">
+                            <i class="bi bi-people"></i> Pregled strank
+                        </a>
+                        <a href="{{ url_for('admin_transactions') }}" class="btn btn-info">
+                            <i class="bi bi-arrow-left-right"></i> Pregled transakcij
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
