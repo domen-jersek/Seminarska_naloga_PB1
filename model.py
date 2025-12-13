@@ -80,7 +80,7 @@ class Tabela:
         """
         Preberi vir v obliki CSV in vračaj slovarje za vsako vrstico.
         """
-        with open(f"podatki/{cls.VIR}") as f:
+        with open(f"podatki/{cls.VIR}", encoding="utf-8") as f:
             rd = csv.reader(f)
             stolpci = next(rd)
             for vrstica in rd:
@@ -166,56 +166,6 @@ class Stranka(Tabela, Entiteta):
                 VALUES (:id_stranke, :ime, :priimek, :naslov, :datum_rojstva);
             """, cls.preberi_vir())
 
-
-@dataclass
-class Racun(Tabela, Entiteta):
-    """
-    Razred za racun.
-    """
-
-    IBAN: str = field(default=None)
-    id_lastnik: int = field(default=None)
-    stanje: int = field(default=None)
-    
-    VIR = "racun.csv"
-    IME = 'racun'
-
-    @classmethod
-    def ustvari_tabelo(cls, cur=None):
-        """
-        Ustvari tabelo "racun".
-        """
-        with Kazalec(cur) as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS racun (
-                        IBAN            TEXT     PRIMARY KEY UNIQUE CHECK(LENGTH(IBAN) = 34), -- 34 je standart po Wiki
-                        id_lastnik      INTEGER  NOT NULL REFERENCES stranka(id_stranke),
-                        stanje          INTEGER  NOT NULL DEFAULT(0) -- centi
-                );
-            """)
-
-    @classmethod
-    def pobrisi_tabelo(cls, cur=None):
-        """
-        Pobriši tabelo "racun".
-        """
-        with Kazalec(cur) as cur:
-            cur.execute("""
-                DROP TABLE IF EXISTS racun;
-            """)
-    
-    @classmethod
-    def uvozi_podatke(cls, cur=None):
-        """
-        Uvozi podatke v tabelo "racun".
-        """
-        with Kazalec(cur) as cur:
-            cur.executemany("""
-                INSERT INTO racun (IBAN, id_lastnik, stanje)
-                VALUES (:IBAN, :id_lastnik, :stanje);
-            """, cls.preberi_vir())
-
-
 @dataclass
 class Paket(Tabela, Entiteta):
     """
@@ -223,7 +173,6 @@ class Paket(Tabela, Entiteta):
     """
 
     id_paket: int = field(default=None)
-    id_racuna: str = field(default=None)
     tip: str = field(default=None)
     cena: int = field(default=None)
     osnovni_limit: int = field(default=None)
@@ -241,8 +190,7 @@ class Paket(Tabela, Entiteta):
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS paket (
                     id_paket  INTEGER PRIMARY KEY,
-                    id_racuna TEXT NOT NULL REFERENCES racun(IBAN),
-                    tip       TEXT     NOT NULL,
+                    tip       TEXT     NOT NULL UNIQUE,
                     cena      INTEGER  NOT NULL,
                     osnovni_limit  INTEGER,
                     dnevni_limit   INTEGER  NOT NULL
@@ -267,9 +215,60 @@ class Paket(Tabela, Entiteta):
         """
         with Kazalec(cur) as cur:
             cur.executemany("""
-                INSERT INTO paket (id_paket, id_racuna, tip, cena, osnovni_limit, dnevni_limit)
-                VALUES (:id_paket, :id_racuna, :tip, :cena, :osnovni_limit, :dnevni_limit);
+                INSERT INTO paket (id_paket, tip, cena, osnovni_limit, dnevni_limit)
+                VALUES (:id_paket, :tip, :cena, :osnovni_limit, :dnevni_limit);
             """, cls.preberi_vir())
+
+@dataclass
+class Racun(Tabela, Entiteta):
+    """
+    Razred za racun.
+    """
+
+    IBAN: str = field(default=None)
+    id_lastnik: int = field(default=None)
+    id_paket: int = field(default=None)
+    stanje: int = field(default=None)
+    
+    VIR = "racun.csv"
+    IME = 'racun'
+
+    @classmethod
+    def ustvari_tabelo(cls, cur=None):
+        """
+        Ustvari tabelo "racun".
+        """
+        with Kazalec(cur) as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS racun (
+                        IBAN            TEXT     PRIMARY KEY UNIQUE CHECK(LENGTH(IBAN) = 19), -- 19 je standard po Wiki za SLO
+                        id_lastnik      INTEGER  NOT NULL REFERENCES stranka(id_stranke),
+                        id_paket        INTEGER  NOT NULL REFERENCES paket(id_paket),
+                        stanje          INTEGER  NOT NULL DEFAULT(0) -- centi
+                );
+            """)
+
+    @classmethod
+    def pobrisi_tabelo(cls, cur=None):
+        """
+        Pobriši tabelo "racun".
+        """
+        with Kazalec(cur) as cur:
+            cur.execute("""
+                DROP TABLE IF EXISTS racun;
+            """)
+    
+    @classmethod
+    def uvozi_podatke(cls, cur=None):
+        """
+        Uvozi podatke v tabelo "racun".
+        """
+        with Kazalec(cur) as cur:
+            cur.executemany("""
+                INSERT INTO racun (IBAN, id_lastnik, id_paket, stanje)
+                VALUES (:IBAN, :id_lastnik, :id_paket,:stanje);
+            """, cls.preberi_vir())
+
 
 @dataclass
 class Transakcija(Tabela, Entiteta):
@@ -294,7 +293,7 @@ class Transakcija(Tabela, Entiteta):
         """
         with Kazalec(cur) as cur:
             cur.execute("""
-                CREATE TABLE IF NOT EXISTS transkacija (
+                CREATE TABLE IF NOT EXISTS transakcija (
                     id_transakcije  INTEGER  PRIMARY KEY AUTOINCREMENT,
                     posilja         TEXT     REFERENCES racun(IBAN), -- NULL za polog
                     prejema         TEXT     REFERENCES racun(IBAN), -- NULL za dvig
@@ -328,10 +327,15 @@ class Transakcija(Tabela, Entiteta):
         Uvozi podatke v tabelo "transakcija".
         """
         with Kazalec(cur) as cur:
-            cur.executemany("""
-                INSERT INTO transakcija (id_transakcije, posilja, prejema, tip, znesek, cas)
-                VALUES (:id_transakcije, :posilja, :prejema, :tip, :znesek, :cas);
-            """, cls.preberi_vir())    
+            for vrstica in cls.preberi_vir():
+                if vrstica.get('posilja') == 'None':
+                    vrstica['posilja'] = None # popravi zapis iz csv-ja
+                if vrstica.get('prejema') == 'None':
+                    vrstica['prejema'] = None
+                cur.execute("""
+                    INSERT INTO transakcija (id_transakcije, posilja, prejema, tip, znesek, cas)
+                    VALUES (:id_transakcije, :posilja, :prejema, :tip, :znesek, :cas);
+                """, vrstica)    
             
 
 ##########################################################################################################################################################
@@ -386,6 +390,10 @@ def ustvari_prazno_bazo():
         ustvari_tabele()
     print("✅ Prazna baza 'Banka.db' z vsemi tabelami je ustvarjena.")
 
+
 if __name__ == "__main__":
     # Samo ustvari prazno bazo (brez podatkov)
-    ustvari_prazno_bazo()
+    # pobrisi_tabele()
+    # ustvari_prazno_bazo()
+    ustvari_bazo(pobrisi=True)
+    print('✔️   Uspešno izvedeno!! 🎆🎇🎆')
