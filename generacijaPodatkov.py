@@ -1,7 +1,9 @@
+# pip install bcrypt
 import csv
 import random
 import string
 from datetime import datetime, timedelta
+import bcrypt
 
 imena = ['Franc', ' Janez', 'Ana', ' Marko', 'Maja', ' Andrej', 'Irena', ' Ivan', 'Mojca', ' Luka', 'Nina', ' Anton', 'Mateja', ' Jože', 'Nataša', ' Matej', 'Eva', ' Peter', 'Andreja', ' Jožef', 'Sara', ' Tomaž', 'Barbara', ' Marjan', 'Petra', ' Milan', 'Anja', ' Aleš', 'Jožica', ' Rok', 'Katja', ' Bojan', 'Nika', ' Robert', 'Tina', ' Boštjan', 'Tanja', ' Branko', 'Tatjana', ' Miha', 'Vesna', ' Matjaž', 'Katarina', ' Gregor', 'Sonja', ' David', 'Alenka', ' Jan', 'Milena', ' Dejan', 'Urška', ' Martin', 'Martina', ' Igor', 'Majda', ' Nejc', 'Špela', ' Žiga', 'Tjaša', ' Boris', 'Ema', ' Žan', 'Lara', ' Jure', 'Darja', ' Dušan', 'Jožefa', ' Stanislav', 'Anica', ' Uroš', 'Helena', ' Blaž', 'Dragica', ' Matic', 'Neža', ' Mitja', 'Simona', ' Simon', 'Ivana', ' Jakob', 'Zala', ' Nik', 'Nada', ' Jaka', 'Kristina', ' Klemen', 'Suzana', ' Darko', 'Maša', ' Anže', 'Zdenka', ' Alojz', 'Lidija', ' Primož', 'Danica', ' Gašper', 'Marjeta', ' Jernej', 'Sabina', ' Aljaž', 'Olga', ' Filip', 'Janja', ' Aleksander', 'Lana', ' Denis', 'Frančiška', ' Tadej', 'Marta', ' Drago', 'Terezija', ' Miran', 'Karmen', ' Roman', 'Klara', ' Mark', 'Kaja', ' Matija', 'Vida', ' Tim', 'Hana', ' Damjan', 'Aleksandra', ' Tilen', 'Julija', ' Vid', 'Ivanka', ' Zoran', 'Silva', ' Borut', 'Darinka', ' Alen', 'Anita', ' Štefan', 'Veronika', 
 ' Vladimir', 'Lucija', ' Domen', 'Jana', ' Srečko', 'Lea', ' Goran', 'Brigita', ' Slavko', 'Metka', ' Janko', 'Antonija', ' Leon', 'Monika', ' Danijel', 'Ajda', ' Mirko', 'Natalija', ' Miroslav', 'Angela', ' Matevž', 'Jasmina', ' Lovro', 'Tamara', ' Urban', 'Cvetka', ' Maks', 'Manca', ' Andraž', 'Nevenka', ' Gal', 'Mia', ' Stanko', 'Renata', ' Jurij', 'Branka', ' Sašo', 'Marjana', ' Mihael', 'Saša', ' Dragan', 'Slavica', ' Iztok', 'Ljudmila', ' Benjamin', 'Stanislava', ' Erik', 'Zoja', ' Maj', 'Klavdija', ' Lan', 'Laura', ' Samo', 'Bojana', ' Viktor', 'Teja', ' Patrik', 'Ela', ' Anej', 'Alojzija', ' Vinko', 'Elizabeta', ' Marijan', 'Valentina'] 
@@ -63,6 +65,18 @@ def random_cas(začetek=datetime(1950, 1, 1), konec=datetime.now()):
     random_seconds = random.randint(0, int(razlika.total_seconds()))
     return (začetek + timedelta(seconds=random_seconds)).strftime("%Y-%m-%d %H:%M:%S")
 
+def random_geslo(dolžina = 8):
+    """
+    generira random geslo
+    
+    :param dolžina: dolžina gesla
+    """
+    
+    nabor = string.ascii_letters + string.digits + string.punctuation
+    
+    return "".join(random.sample(nabor, dolžina))
+
+# for _ in range(20): print(random_geslo())
 N_STRANK = 200
 N_RACUNOV = 300  
 N_PAKETOV = 150  
