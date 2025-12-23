@@ -4,7 +4,12 @@
 
 {% block content %}
 <div class="container my-4">
-    <h1 class="mb-4"><i class="bi bi-people"></i> Vse stranke</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-people"></i> Vse stranke</h1>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
+            <i class="bi bi-plus-circle"></i> Dodaj novo stranko
+        </button>
+    </div>
 
     <div class="card shadow-sm">
         <div class="card-body">
@@ -19,6 +24,7 @@
                             <th>Datum rojstva</th>
                             <th>Št. računov</th>
                             <th>Skupno stanje</th>
+                            <th>Akcije</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -31,6 +37,20 @@
                             <td>{{ stranka.datum_rojstva }}</td>
                             <td>{{ stranka.stevilo_racunov }}</td>
                             <td>{{ stranka.skupno_stanje | centi_v_eure }} €</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editCustomerModal{{ stranka.id_stranke }}"
+                                        title="Uredi">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#deleteCustomerModal{{ stranka.id_stranke }}"
+                                        title="Izbriši">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -39,4 +59,105 @@
         </div>
     </div>
 </div>
+
+<!-- Add Customer Modal -->
+<div class="modal fade" id="addCustomerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Dodaj novo stranko</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_customer') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Ime *</label>
+                        <input type="text" class="form-control" name="ime" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priimek *</label>
+                        <input type="text" class="form-control" name="priimek" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Naslov *</label>
+                        <input type="text" class="form-control" name="naslov" placeholder="Ulica in številka, Mesto" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Datum rojstva *</label>
+                        <input type="date" class="form-control" name="datum_rojstva" required>
+                    </div>
+                    <p class="text-muted small">* Obvezna polja</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-success">Dodaj stranko</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Modals -->
+{% for stranka in stranke %}
+<div class="modal fade" id="editCustomerModal{{ stranka.id_stranke }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Uredi stranko</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_edit_customer', id_stranke=stranka.id_stranke) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Ime</label>
+                        <input type="text" class="form-control" name="ime" value="{{ stranka.ime }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Priimek</label>
+                        <input type="text" class="form-control" name="priimek" value="{{ stranka.priimek }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Naslov</label>
+                        <input type="text" class="form-control" name="naslov" value="{{ stranka.naslov }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Datum rojstva</label>
+                        <input type="date" class="form-control" name="datum_rojstva" value="{{ stranka.datum_rojstva }}" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-primary">Shrani spremembe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Delete Modals -->
+{% for stranka in stranke %}
+<div class="modal fade" id="deleteCustomerModal{{ stranka.id_stranke }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Izbriši stranko</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_delete_customer', id_stranke=stranka.id_stranke) }}">
+                <div class="modal-body">
+                    <p class="text-danger"><strong>⚠️ POZOR: To dejanje je nepovratno!</strong></p>
+                    <p>Ali ste prepričani, da želite izbrisati stranko:</p>
+                    <p><strong>{{ stranka.ime }} {{ stranka.priimek }}</strong> (ID: {{ stranka.id_stranke }})?</p>
+                    <p>Izbrisani bodo tudi vsi računi, paketi in transakcije te stranke.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-danger">Da, izbriši</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
 {% endblock %}

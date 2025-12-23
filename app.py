@@ -293,6 +293,58 @@ def admin_customers():
     return render_template('admin/customers.html', stranke=stranke)
 
 
+@app.route('/admin/customers/add', methods=['POST'])
+@admin_required
+def admin_add_customer():
+    """Dodaj novo stranko"""
+    ime = request.form.get('ime')
+    priimek = request.form.get('priimek')
+    naslov = request.form.get('naslov')
+    datum_rojstva = request.form.get('datum_rojstva')
+    
+    success, message, id_stranke = bank.add_stranka(ime, priimek, naslov, datum_rojstva)
+    
+    if success:
+        flash(f'✅ {message} (ID: {id_stranke})', 'success')
+    else:
+        flash(f'❌ {message}', 'danger')
+    
+    return redirect(url_for('admin_customers'))
+
+
+@app.route('/admin/customers/<int:id_stranke>/delete', methods=['POST'])
+@admin_required
+def admin_delete_customer(id_stranke):
+    """Izbriši stranko"""
+    success, message = bank.delete_stranka(id_stranke)
+    
+    if success:
+        flash(f'✅ {message}', 'success')
+    else:
+        flash(f'❌ {message}', 'danger')
+    
+    return redirect(url_for('admin_customers'))
+
+
+@app.route('/admin/customers/<int:id_stranke>/edit', methods=['POST'])
+@admin_required
+def admin_edit_customer(id_stranke):
+    """Uredi podatke stranke"""
+    ime = request.form.get('ime')
+    priimek = request.form.get('priimek')
+    naslov = request.form.get('naslov')
+    datum_rojstva = request.form.get('datum_rojstva')
+    
+    success, message = bank.update_stranka(id_stranke, ime, priimek, naslov, datum_rojstva)
+    
+    if success:
+        flash(f'✅ {message}', 'success')
+    else:
+        flash(f'❌ {message}', 'danger')
+    
+    return redirect(url_for('admin_customers'))
+
+
 @app.route('/admin/transactions')
 @admin_required
 def admin_transactions():

@@ -367,3 +367,100 @@ class BankService:
                 'total_transactions': total_transactions,
                 'avg_balance': avg_balance
             }
+    
+    def add_stranka(self, ime, priimek, naslov, datum_rojstva):
+        """
+        Dodaj novo stranko
+        
+        Returns: (success: bool, message: str, id_stranke: int or None)
+        """
+        if not ime or len(ime.strip()) == 0:
+            return False, "Ime je obvezno", None
+        if not priimek or len(priimek.strip()) == 0:
+            return False, "Priimek je obvezen", None
+        if not naslov or len(naslov.strip()) == 0:
+            return False, "Naslov je obvezen", None
+        if not datum_rojstva:
+            return False, "Datum rojstva je obvezen", None
+        
+        try:
+            with get_connection():
+                with Kazalec() as cur:
+                    cur.execute("""
+                        INSERT INTO stranka (ime, priimek, naslov, datum_rojstva)
+                        VALUES (?, ?, ?, ?)
+                    """, (ime.strip(), priimek.strip(), naslov.strip(), datum_rojstva))
+                    
+                    id_stranke = cur.lastrowid
+                    return True, "Stranka uspešno dodana", id_stranke
+        except Exception as e:
+            return False, f"Napaka pri dodajanju stranke: {str(e)}", None
+    
+    def delete_stranka(self, id_stranke):
+        """
+        Izbriši stranko in vse njene račune ter transakcije
+        
+        Returns: (success: bool, message: str)
+        """
+        try:
+            with get_connection():
+                with Kazalec() as cur:
+                    # Preveri, če stranka obstaja
+                    cur.execute("SELECT id_stranke FROM stranka WHERE id_stranke = ?", (id_stranke,))
+                    if not cur.fetchone():
+                        return False, "Stranka ne obstaja"
+                    
+                    # Pridobi vse račune stranke
+                    cur.execute("SELECT IBAN FROM racun WHERE id_lastnik = ?", (id_stranke,))
+                    ibans = [row[0] for row in cur.fetchall()]
+                    
+                    # Izbriši vse transakcije povezane z računi
+                    for iban in ibans:
+                        cur.execute("DELETE FROM transkacija WHERE posilja = ? OR prejema = ?", (iban, iban))
+                    
+                    # Izbriši vse pakete
+                    for iban in ibans:
+                        cur.execute("DELETE FROM paket WHERE id_racuna = ?", (iban,))
+                    
+                    # Izbriši vse račune
+                    cur.execute("DELETE FROM racun WHERE id_lastnik = ?", (id_stranke,))
+                    
+                    # Izbriši stranko
+                    cur.execute("DELETE FROM stranka WHERE id_stranke = ?", (id_stranke,))
+                    
+                    return True, "Stranka in vsi povezani podatki uspešno izbrisani"
+        except Exception as e:
+            return False, f"Napaka pri brisanju stranke: {str(e)}"
+    
+    def update_stranka(self, id_stranke, ime, priimek, naslov, datum_rojstva):
+        """
+        Posodobi podatke stranke
+        
+        Returns: (success: bool, message: str)
+        """
+        if not ime or len(ime.strip()) == 0:
+            return False, "Ime je obvezno"
+        if not priimek or len(priimek.strip()) == 0:
+            return False, "Priimek je obvezen"
+        if not naslov or len(naslov.strip()) == 0:
+            return False, "Naslov je obvezen"
+        if not datum_rojstva:
+            return False, "Datum rojstva je obvezen"
+        
+        try:
+            with get_connection():
+                with Kazalec() as cur:
+                    # Preveri, če stranka obstaja
+                    cur.execute("SELECT id_stranke FROM stranka WHERE id_stranke = ?", (id_stranke,))
+                    if not cur.fetchone():
+                        return False, "Stranka ne obstaja"
+                    
+                    cur.execute("""
+                        UPDATE stranka 
+                        SET ime = ?, priimek = ?, naslov = ?, datum_rojstva = ?
+                        WHERE id_stranke = ?
+                    """, (ime.strip(), priimek.strip(), naslov.strip(), datum_rojstva, id_stranke))
+                    
+                    return True, "Podatki stranke uspešno posodobljeni"
+        except Exception as e:
+            return False, f"Napaka pri posodabljanju stranke: {str(e)}"
