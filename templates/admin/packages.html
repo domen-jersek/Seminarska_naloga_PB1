@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Paketi - Admin - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-box-seam"></i> Vsi paketi</h1>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addPackageModal">
+            <i class="bi bi-plus-circle"></i> Dodaj nov paket
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tip</th>
+                            <th>Cena (€/mesec)</th>
+                            <th>Osnovni limit (€)</th>
+                            <th>Dnevni limit (€)</th>
+                            <th>Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for paket in paketi %}
+                        <tr>
+                            <td>{{ paket.id_paket }}</td>
+                            <td><span class="badge bg-info">{{ paket.tip }}</span></td>
+                            <td>{{ paket.cena | centi_v_eure }} €</td>
+                            <td>{% if paket.osnovni_limit %}{{ paket.osnovni_limit | centi_v_eure }} €{% else %}<span class="text-muted">Brez limita</span>{% endif %}</td>
+                            <td>{{ paket.dnevni_limit | centi_v_eure }} €</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-primary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#editPackageModal{{ paket.id_paket }}"
+                                        title="Uredi">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deletePackageModal{{ paket.id_paket }}"
+                                        title="Izbriši">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Package Modal -->
+<div class="modal fade" id="addPackageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Dodaj nov paket</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_package') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tip paketa *</label>
+                        <input type="text" class="form-control" name="tip" placeholder="npr. Gold, Student..." required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mesečna cena (EUR) *</label>
+                        <input type="number" class="form-control" name="cena" value="0" min="0" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Osnovni limit (EUR)</label>
+                        <input type="number" class="form-control" name="osnovni_limit" min="0" step="0.01"
+                               placeholder="Pustite prazno za brez limita">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dnevni limit (EUR) *</label>
+                        <input type="number" class="form-control" name="dnevni_limit" value="100" min="0" step="0.01" required>
+                    </div>
+                    <p class="text-muted small">* Obvezna polja</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-success">Dodaj paket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Package Modals -->
+{% for paket in paketi %}
+<div class="modal fade" id="editPackageModal{{ paket.id_paket }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil"></i> Uredi paket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_edit_package', id_paket=paket.id_paket) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tip paketa *</label>
+                        <input type="text" class="form-control" name="tip" value="{{ paket.tip }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mesečna cena (EUR) *</label>
+                        <input type="number" class="form-control" name="cena" 
+                               value="{{ (paket.cena / 100) if paket.cena else 0 }}" min="0" step="0.01" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Osnovni limit (EUR)</label>
+                        <input type="number" class="form-control" name="osnovni_limit" 
+                               value="{{ (paket.osnovni_limit / 100) if paket.osnovni_limit else '' }}" 
+                               min="0" step="0.01" placeholder="Pustite prazno za brez limita">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Dnevni limit (EUR) *</label>
+                        <input type="number" class="form-control" name="dnevni_limit" 
+                               value="{{ (paket.dnevni_limit / 100) if paket.dnevni_limit else 0 }}" 
+                               min="0" step="0.01" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-primary">Shrani spremembe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Delete Package Modals -->
+{% for paket in paketi %}
+<div class="modal fade" id="deletePackageModal{{ paket.id_paket }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Izbriši paket</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_delete_package', id_paket=paket.id_paket) }}">
+                <div class="modal-body">
+                    <p class="text-danger"><strong>⚠️ POZOR: To dejanje je nepovratno!</strong></p>
+                    <p>Ali ste prepričani, da želite izbrisati paket:</p>
+                    <p><strong>{{ paket.tip }}</strong> (ID: {{ paket.id_paket }})?</p>
+                    <p class="text-muted">Paket je mogoče izbrisati le, če ni dodeljen nobenemu računu.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-danger">Da, izbriši</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

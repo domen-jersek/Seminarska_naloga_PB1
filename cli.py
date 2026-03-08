@@ -61,31 +61,32 @@ def print_menu():
 
 
 def login():
-    """Prijava uporabnika"""
+    """Prijava uporabnika z uporabniškim imenom in geslom"""
     global current_user, is_admin
     
     print("\n--- PRIJAVA ---")
-    user_id = input("Vnesite ID stranke (ali 'admin' za administratorja): ").strip()
+    uporabnisko_ime = input("Uporabniško ime: ").strip()
+    geslo = input("Geslo: ").strip()
     
-    if user_id.lower() == 'admin':
-        is_admin = True
-        # Ustvari dummy objekt za admina
-        class Admin:
-            id_stranke = 'admin'
-        current_user = Admin()
-        print("✅ Prijavljeni kot administrator!")
-    else:
-        try:
-            user_id = int(user_id)
-            stranka = bank.get_stranka(user_id)
+    success, user_data, message = bank.authenticate(uporabnisko_ime, geslo)
+    
+    if success:
+        if user_data['vloga'] == 'admin':
+            is_admin = True
+            class Admin:
+                id_stranke = 'admin'
+            current_user = Admin()
+            print("✅ Prijavljeni kot administrator!")
+        else:
+            stranka = bank.get_stranka(user_data['id_stranke'])
             if stranka:
                 current_user = stranka
                 is_admin = False
                 print(f"✅ Prijavljeni kot {stranka.ime} {stranka.priimek}!")
             else:
                 print("❌ Napaka: Stranka ne obstaja!")
-        except ValueError:
-            print("❌ Napaka: Neveljaven ID!")
+    else:
+        print(f"❌ {message}")
     
     input("\nPritisnite Enter za nadaljevanje...")
 

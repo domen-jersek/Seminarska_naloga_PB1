@@ -15,10 +15,15 @@
 
                 <form id="loginForm">
                     <div class="mb-3">
-                        <label for="user_id" class="form-label">ID Stranke</label>
-                        <input type="text" class="form-control form-control-lg" id="user_id" name="user_id" 
-                               placeholder="Vnesite ID stranke ali 'admin'" required>
-                        <div class="form-text">Uporabite 'admin' za administratorski dostop</div>
+                        <label for="uporabnisko_ime" class="form-label">Uporabniško ime</label>
+                        <input type="text" class="form-control form-control-lg" id="uporabnisko_ime" 
+                               name="uporabnisko_ime" placeholder="Vnesite uporabniško ime" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="geslo" class="form-label">Geslo</label>
+                        <input type="password" class="form-control form-control-lg" id="geslo" 
+                               name="geslo" placeholder="Vnesite geslo" required>
                     </div>
 
                     <div class="d-grid">
@@ -32,7 +37,8 @@
 
                 <div class="text-center mt-4">
                     <small class="text-muted">
-                        Demo prijava - Uporabite katerokoli ID stranko iz baze (npr. 1, 2, 3...)
+                        Demo prijava: uporabnik <strong>marko.novak</strong> / geslo <strong>geslo123</strong><br>
+                        Admin: <strong>admin</strong> / <strong>admin123</strong>
                     </small>
                 </div>
             </div>
@@ -46,7 +52,8 @@
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const userId = document.getElementById('user_id').value;
+    const uporabniskoIme = document.getElementById('uporabnisko_ime').value;
+    const geslo = document.getElementById('geslo').value;
     const errorDiv = document.getElementById('loginError');
     
     try {
@@ -55,7 +62,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ user_id: userId })
+            body: JSON.stringify({ uporabnisko_ime: uporabniskoIme, geslo: geslo })
         });
         
         const data = await response.json();

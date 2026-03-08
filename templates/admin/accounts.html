@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Računi - Admin - Slovenia Bank{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-wallet2"></i> Vsi računi</h1>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addAccountModal">
+            <i class="bi bi-plus-circle"></i> Dodaj nov račun
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>IBAN</th>
+                            <th>Lastnik</th>
+                            <th>Paket</th>
+                            <th>Stanje</th>
+                            <th>Akcije</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for racun in racuni %}
+                        <tr>
+                            <td><code>{{ racun.IBAN }}</code></td>
+                            <td>{{ racun.ime_lastnika }} {{ racun.priimek_lastnika }} <small class="text-muted">(ID: {{ racun.id_lastnik }})</small></td>
+                            <td><span class="badge bg-info">{{ racun.paket_tip }}</span></td>
+                            <td>{{ racun.stanje | centi_v_eure }} €</td>
+                            <td>
+                                <button type="button" class="btn btn-sm btn-warning"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#changePackageModal{{ loop.index }}"
+                                        title="Spremeni paket">
+                                    <i class="bi bi-box-seam"></i>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-danger"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteAccountModal{{ loop.index }}"
+                                        title="Izbriši">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Account Modal -->
+<div class="modal fade" id="addAccountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title"><i class="bi bi-plus-circle"></i> Dodaj nov račun</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_add_account') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Lastnik (stranka) *</label>
+                        <select class="form-select" name="id_lastnik" required>
+                            <option value="">Izberite stranko</option>
+                            {% for stranka in stranke %}
+                            <option value="{{ stranka.id_stranke }}">
+                                {{ stranka.ime }} {{ stranka.priimek }} (ID: {{ stranka.id_stranke }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Paket *</label>
+                        <select class="form-select" name="id_paket" required>
+                            {% for paket in paketi %}
+                            <option value="{{ paket.id_paket }}">
+                                {{ paket.tip }} ({{ paket.cena | centi_v_eure }} €/mesec)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Začetno stanje (EUR)</label>
+                        <input type="number" class="form-control" name="stanje" value="0" min="0" step="0.01">
+                    </div>
+                    <p class="text-muted small">* Obvezna polja. IBAN bo generiran samodejno.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-success">Ustvari račun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Package Modals -->
+{% for racun in racuni %}
+<div class="modal fade" id="changePackageModal{{ loop.index }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title"><i class="bi bi-box-seam"></i> Spremeni paket</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_change_package', iban=racun.IBAN) }}">
+                <div class="modal-body">
+                    <p>Račun: <code>{{ racun.IBAN }}</code></p>
+                    <p>Lastnik: <strong>{{ racun.ime_lastnika }} {{ racun.priimek_lastnika }}</strong></p>
+                    <p>Trenutni paket: <span class="badge bg-info">{{ racun.paket_tip }}</span></p>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="form-label">Nov paket *</label>
+                        <select class="form-select" name="id_paket" required>
+                            {% for paket in paketi %}
+                            <option value="{{ paket.id_paket }}" {% if paket.id_paket == racun.id_paket %}selected{% endif %}>
+                                {{ paket.tip }} ({{ paket.cena | centi_v_eure }} €/mesec, 
+                                dnevni limit: {{ paket.dnevni_limit | centi_v_eure }} €)
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-warning">Spremeni paket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- Delete Account Modals -->
+{% for racun in racuni %}
+<div class="modal fade" id="deleteAccountModal{{ loop.index }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Izbriši račun</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_delete_account', iban=racun.IBAN) }}">
+                <div class="modal-body">
+                    <p class="text-danger"><strong>⚠️ POZOR: To dejanje je nepovratno!</strong></p>
+                    <p>Ali ste prepričani, da želite izbrisati račun:</p>
+                    <p>IBAN: <code>{{ racun.IBAN }}</code></p>
+                    <p>Lastnik: <strong>{{ racun.ime_lastnika }} {{ racun.priimek_lastnika }}</strong></p>
+                    <p>Stanje: <strong>{{ racun.stanje | centi_v_eure }} €</strong></p>
+                    <p>Izbrisane bodo tudi vse transakcije tega računa.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Prekliči</button>
+                    <button type="submit" class="btn btn-danger">Da, izbriši</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endblock %}

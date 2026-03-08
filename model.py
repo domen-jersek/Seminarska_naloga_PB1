@@ -190,6 +190,52 @@ class Stranka(Tabela, Entiteta):
                 VALUES (:id_stranke, :ime, :priimek, :naslov, :datum_rojstva);
             """, cls.preberi_vir())
 
+
+@dataclass
+class Uporabnik(Tabela, Entiteta):
+    """
+    Razred za uporabnika (avtentikacija).
+    Hrani uporabniško ime in hasherano geslo.
+    """
+
+    id_uporabnika: int = field(default=None)
+    uporabnisko_ime: str = field(default=None)
+    geslo_hash: str = field(default=None)
+    id_stranke: int = field(default=None)
+    vloga: str = field(default=None)
+
+    IME = 'uporabnik'
+
+    @classmethod
+    def ustvari_tabelo(cls, cur=None):
+        """
+        Ustvari tabelo "uporabnik".
+        """
+        with Kazalec(cur) as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS uporabnik (
+                    id_uporabnika    INTEGER  PRIMARY KEY AUTOINCREMENT,
+                    uporabnisko_ime  TEXT     NOT NULL UNIQUE CHECK(LENGTH(uporabnisko_ime) >= 3),
+                    geslo_hash       TEXT     NOT NULL,
+                    id_stranke       INTEGER  REFERENCES stranka(id_stranke),
+                    vloga            TEXT     NOT NULL DEFAULT 'stranka' CHECK(vloga IN ('stranka', 'admin'))
+                );
+            """)
+
+    @classmethod
+    def pobrisi_tabelo(cls, cur=None):
+        """
+        Pobriši tabelo "uporabnik".
+        """
+        with Kazalec(cur) as cur:
+            cur.execute("""
+                DROP TABLE IF EXISTS uporabnik;
+            """)
+
+    @classmethod
+    def uvozi_podatke(cls, cur=None):
+        pass
+
 @dataclass
 class Paket(Tabela, Entiteta):
     """
@@ -412,12 +458,11 @@ def ustvari_prazno_bazo():
     """
     with get_connection():  # auto-commit
         ustvari_tabele()
-    print("✅ Prazna baza 'Banka.db' z vsemi tabelami je ustvarjena.")
+    print("Prazna baza 'Banka.db' z vsemi tabelami je ustvarjena.")
 
 
 if __name__ == "__main__":
-    # Samo ustvari prazno bazo (brez podatkov)
-    # pobrisi_tabele()
-    # ustvari_prazno_bazo()
-    ustvari_bazo(pobrisi=True)
-    print('✔️   Uspešno izvedeno!! 🎆🎇🎆')
+    # Pobriši in ustvari prazno bazo (brez uvoza CSV)
+    pobrisi_tabele()
+    ustvari_prazno_bazo()
+    print('Uspešno izvedeno!!')
