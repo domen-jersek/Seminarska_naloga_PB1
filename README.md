@@ -88,7 +88,7 @@ To bo ustvarilo prazno bazo z vsemi tabelami.
 Če želite generirati testne podatke strank, računov in transakcij:
 
 ```powershell
-python generacijaPodatkov.py
+python generate_demo_data.py
 ```
 
 ---
