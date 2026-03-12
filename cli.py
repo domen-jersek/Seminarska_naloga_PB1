@@ -41,13 +41,25 @@ def print_menu():
         print("1. Prijava")
         print("2. Izhod")
     elif is_admin:
+        print("── STRANKE ──────────────")
         print("1. Pregled vseh strank")
         print("2. Dodaj stranko")
         print("3. Izbriši stranko")
-        print("4. Pregled vseh transakcij")
-        print("5. Statistika sistema")
-        print("6. Odjava")
-        print("7. Izhod")
+        print("── RAČUNI ───────────────")
+        print("4. Pregled vseh računov")
+        print("5. Dodaj račun stranki")
+        print("6. Izbriši račun")
+        print("7. Spremeni paket računa")
+        print("── PAKETI ───────────────")
+        print("8. Pregled vseh paketov")
+        print("9. Dodaj paket")
+        print("10. Uredi paket")
+        print("11. Izbriši paket")
+        print("── OSTALO ───────────────")
+        print("12. Pregled vseh transakcij")
+        print("13. Statistika sistema")
+        print("14. Odjava")
+        print("15. Izhod")
     else:
         print("1. Pregled računov")
         print("2. Pregled stanja računa")
@@ -459,6 +471,330 @@ def admin_view_statistics():
     input("\nPritisnite Enter za nadaljevanje...")
 
 
+# ==================== ADMIN - RAČUNI ====================
+
+def admin_view_accounts():
+    """Pregled vseh računov"""
+    print("\n--- VSI RAČUNI ---")
+    racuni = bank.get_all_racuni()
+
+    if not racuni:
+        print("Ni računov.")
+    else:
+        print(f"\n{'IBAN':<22} {'Lastnik':<25} {'Paket':<12} {'Stanje':>12}")
+        print("-" * 75)
+        for r in racuni:
+            lastnik = f"{r['ime_lastnika']} {r['priimek_lastnika']}"
+            stanje_eur = r['stanje'] / 100
+            print(f"{r['IBAN']:<22} {lastnik:<25} {r['paket_tip']:<12} {stanje_eur:>11.2f} €")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+def admin_add_account():
+    """Dodaj nov račun stranki"""
+    print("\n--- DODAJ RAČUN ---")
+
+    # Prikaži stranke
+    stranke = bank.get_all_stranke()
+    if not stranke:
+        print("❌ Ni strank v sistemu.")
+        input("\nPritisnite Enter za nadaljevanje...")
+        return
+
+    print("\nStranke:")
+    for s in stranke:
+        print(f"  {s['id_stranke']:>4}. {s['ime']} {s['priimek']}")
+
+    # Prikaži pakete
+    paketi = bank.get_all_paketi()
+    print("\nPaketi:")
+    for p in paketi:
+        limit = f"{p['dnevni_limit']/100:.0f} €/dan" if p['dnevni_limit'] else "brez limita"
+        cena = f"{p['cena']/100:.2f} €/mes" if p['cena'] else "brezplačen"
+        print(f"  {p['id_paket']:>4}. {p['tip']:<12} {cena:<18} dnevni limit: {limit}")
+
+    try:
+        id_lastnik = int(input("\nID stranke: "))
+        id_paket = int(input("ID paketa: "))
+        stanje_vnos = input("Začetno stanje v EUR (privzeto 0): ").strip()
+        stanje_eur = float(stanje_vnos) if stanje_vnos else 0.0
+        stanje_cents = int(stanje_eur * 100)
+
+        # Generiraj IBAN
+        iban = bank.generate_iban()
+        if not iban:
+            print("❌ Ni mogoče generirati IBAN-a.")
+            input("\nPritisnite Enter za nadaljevanje...")
+            return
+
+        print(f"\nGeneriran IBAN: {iban}")
+        potrditev = input("Ustvariti ta račun? (da/ne): ").strip().lower()
+
+        if potrditev == 'da':
+            success, message = bank.add_racun(iban, id_lastnik, id_paket, stanje_cents)
+            if success:
+                print(f"✅ {message}")
+            else:
+                print(f"❌ {message}")
+        else:
+            print("Ustvarjanje preklicano.")
+
+    except ValueError:
+        print("❌ Napaka: Neveljaven vnos!")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+def admin_delete_account():
+    """Izbriši račun"""
+    print("\n--- IZBRIŠI RAČUN ---")
+
+    racuni = bank.get_all_racuni()
+    if not racuni:
+        print("Ni računov.")
+        input("\nPritisnite Enter za nadaljevanje...")
+        return
+
+    print(f"\n{'#':<4} {'IBAN':<22} {'Lastnik':<25} {'Stanje':>12}")
+    print("-" * 65)
+    for i, r in enumerate(racuni, 1):
+        lastnik = f"{r['ime_lastnika']} {r['priimek_lastnika']}"
+        print(f"{i:<4} {r['IBAN']:<22} {lastnik:<25} {r['stanje']/100:>11.2f} €")
+
+    try:
+        izbira = int(input("\nIzberite račun (številka): ")) - 1
+        if not (0 <= izbira < len(racuni)):
+            print("❌ Neveljavna izbira!")
+            input("\nPritisnite Enter za nadaljevanje...")
+            return
+
+        racun = racuni[izbira]
+        print(f"\n⚠️  POZOR: Izbrisali boste račun {racun['IBAN']}")
+        print(f"   Lastnik: {racun['ime_lastnika']} {racun['priimek_lastnika']}")
+        print(f"   Stanje: {racun['stanje']/100:.2f} €")
+        print("   Izbrisane bodo tudi vse transakcije tega računa!")
+
+        potrditev = input("\nSte prepričani? (da/ne): ").strip().lower()
+        if potrditev == 'da':
+            success, message = bank.delete_racun(racun['IBAN'])
+            if success:
+                print(f"✅ {message}")
+            else:
+                print(f"❌ {message}")
+        else:
+            print("Brisanje preklicano.")
+
+    except ValueError:
+        print("❌ Napaka: Neveljaven vnos!")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+def admin_change_package():
+    """Spremeni paket računa"""
+    print("\n--- SPREMENI PAKET RAČUNA ---")
+
+    racuni = bank.get_all_racuni()
+    if not racuni:
+        print("Ni računov.")
+        input("\nPritisnite Enter za nadaljevanje...")
+        return
+
+    print(f"\n{'#':<4} {'IBAN':<22} {'Lastnik':<25} {'Paket':<12}")
+    print("-" * 65)
+    for i, r in enumerate(racuni, 1):
+        lastnik = f"{r['ime_lastnika']} {r['priimek_lastnika']}"
+        print(f"{i:<4} {r['IBAN']:<22} {lastnik:<25} {r['paket_tip']:<12}")
+
+    paketi = bank.get_all_paketi()
+    print("\nDostopni paketi:")
+    for p in paketi:
+        limit = f"{p['dnevni_limit']/100:.0f} €/dan" if p['dnevni_limit'] else "brez limita"
+        cena = f"{p['cena']/100:.2f} €/mes" if p['cena'] else "brezplačen"
+        print(f"  {p['id_paket']:>4}. {p['tip']:<12} {cena:<18} dnevni limit: {limit}")
+
+    try:
+        izbira = int(input("\nIzberite račun (številka): ")) - 1
+        if not (0 <= izbira < len(racuni)):
+            print("❌ Neveljavna izbira!")
+            input("\nPritisnite Enter za nadaljevanje...")
+            return
+
+        id_paket = int(input("ID novega paketa: "))
+        success, message = bank.update_racun_paket(racuni[izbira]['IBAN'], id_paket)
+        if success:
+            print(f"✅ {message}")
+        else:
+            print(f"❌ {message}")
+
+    except ValueError:
+        print("❌ Napaka: Neveljaven vnos!")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+# ==================== ADMIN - PAKETI ====================
+
+def admin_view_packages():
+    """Pregled vseh paketov"""
+    print("\n--- VSI PAKETI ---")
+    paketi = bank.get_all_paketi()
+
+    if not paketi:
+        print("Ni paketov.")
+    else:
+        print(f"\n{'ID':<6} {'Tip':<14} {'Cena/mes':>10} {'Osnov. limit':>14} {'Dnevni limit':>14}")
+        print("-" * 62)
+        for p in paketi:
+            cena = f"{p['cena']/100:.2f} €" if p['cena'] else "brezpl."
+            osnov = f"{p['osnovni_limit']/100:.2f} €" if p['osnovni_limit'] else "brez"
+            dnevni = f"{p['dnevni_limit']/100:.2f} €" if p['dnevni_limit'] else "brez"
+            print(f"{p['id_paket']:<6} {p['tip']:<14} {cena:>10} {osnov:>14} {dnevni:>14}")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+def admin_add_package():
+    """Dodaj nov paket"""
+    print("\n--- DODAJ PAKET ---")
+
+    tip = input("Tip paketa (npr. Gold): ").strip()
+    if not tip:
+        print("❌ Tip je obvezen!")
+        input("\nPritisnite Enter za nadaljevanje...")
+        return
+
+    try:
+        cena_vnos = input("Mesečna cena v EUR (0 za brezplačen): ").strip()
+        cena_cents = int(float(cena_vnos) * 100) if cena_vnos else 0
+
+        osnov_vnos = input("Osnovni limit v EUR (prazno = brez limita): ").strip()
+        osnov_cents = int(float(osnov_vnos) * 100) if osnov_vnos else None
+
+        dnevni_vnos = input("Dnevni limit v EUR: ").strip()
+        if not dnevni_vnos:
+            print("❌ Dnevni limit je obvezen!")
+            input("\nPritisnite Enter za nadaljevanje...")
+            return
+        dnevni_cents = int(float(dnevni_vnos) * 100)
+
+        success, message, id_paket = bank.add_paket(tip, cena_cents, osnov_cents, dnevni_cents)
+        if success:
+            print(f"✅ {message} (ID: {id_paket})")
+        else:
+            print(f"❌ {message}")
+
+    except ValueError:
+        print("❌ Napaka: Neveljaven vnos!")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+def admin_edit_package():
+    """Uredi obstoječ paket"""
+    print("\n--- UREDI PAKET ---")
+
+    paketi = bank.get_all_paketi()
+    if not paketi:
+        print("Ni paketov.")
+        input("\nPritisnite Enter za nadaljevanje...")
+        return
+
+    print(f"\n{'ID':<6} {'Tip':<14} {'Cena/mes':>10} {'Osnov. limit':>14} {'Dnevni limit':>14}")
+    print("-" * 62)
+    for p in paketi:
+        cena = f"{p['cena']/100:.2f} €" if p['cena'] else "brezpl."
+        osnov = f"{p['osnovni_limit']/100:.2f} €" if p['osnovni_limit'] else "brez"
+        dnevni = f"{p['dnevni_limit']/100:.2f} €" if p['dnevni_limit'] else "brez"
+        print(f"{p['id_paket']:<6} {p['tip']:<14} {cena:>10} {osnov:>14} {dnevni:>14}")
+
+    try:
+        id_paket = int(input("\nID paketa za urejanje: "))
+
+        # Poišči obstoječ paket
+        stari = next((p for p in paketi if p['id_paket'] == id_paket), None)
+        if not stari:
+            print("❌ Paket ne obstaja!")
+            input("\nPritisnite Enter za nadaljevanje...")
+            return
+
+        print(f"\nUrejanje paketa '{stari['tip']}' (Enter = obdrži staro vrednost):")
+
+        tip_vnos = input(f"Tip [{stari['tip']}]: ").strip()
+        tip = tip_vnos if tip_vnos else stari['tip']
+
+        stara_cena_eur = stari['cena'] / 100 if stari['cena'] else 0
+        cena_vnos = input(f"Cena v EUR [{stara_cena_eur:.2f}]: ").strip()
+        cena_cents = int(float(cena_vnos) * 100) if cena_vnos else stari['cena']
+
+        stari_osnov = stari['osnovni_limit'] / 100 if stari['osnovni_limit'] else ''
+        osnov_vnos = input(f"Osnovni limit v EUR [{stari_osnov if stari_osnov else 'brez'}]: ").strip()
+        if osnov_vnos == '':
+            osnov_cents = stari['osnovni_limit']
+        elif osnov_vnos.lower() in ('brez', '0'):
+            osnov_cents = None
+        else:
+            osnov_cents = int(float(osnov_vnos) * 100)
+
+        stari_dnevni = stari['dnevni_limit'] / 100 if stari['dnevni_limit'] else 0
+        dnevni_vnos = input(f"Dnevni limit v EUR [{stari_dnevni:.2f}]: ").strip()
+        dnevni_cents = int(float(dnevni_vnos) * 100) if dnevni_vnos else stari['dnevni_limit']
+
+        success, message = bank.update_paket(id_paket, tip, cena_cents, osnov_cents, dnevni_cents)
+        if success:
+            print(f"✅ {message}")
+        else:
+            print(f"❌ {message}")
+
+    except ValueError:
+        print("❌ Napaka: Neveljaven vnos!")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
+def admin_delete_package():
+    """Izbriši paket"""
+    print("\n--- IZBRIŠI PAKET ---")
+
+    paketi = bank.get_all_paketi()
+    if not paketi:
+        print("Ni paketov.")
+        input("\nPritisnite Enter za nadaljevanje...")
+        return
+
+    print(f"\n{'ID':<6} {'Tip':<14}")
+    print("-" * 22)
+    for p in paketi:
+        print(f"{p['id_paket']:<6} {p['tip']:<14}")
+
+    try:
+        id_paket = int(input("\nID paketa za brisanje: "))
+        paket = next((p for p in paketi if p['id_paket'] == id_paket), None)
+        if not paket:
+            print("❌ Paket ne obstaja!")
+            input("\nPritisnite Enter za nadaljevanje...")
+            return
+
+        print(f"\n⚠️  POZOR: Izbrisali boste paket '{paket['tip']}'.")
+        print("   Paket je mogoče izbrisati le, če ni v uporabi!")
+
+        potrditev = input("Ste prepričani? (da/ne): ").strip().lower()
+        if potrditev == 'da':
+            success, message = bank.delete_paket(id_paket)
+            if success:
+                print(f"✅ {message}")
+            else:
+                print(f"❌ {message}")
+        else:
+            print("Brisanje preklicano.")
+
+    except ValueError:
+        print("❌ Napaka: Neveljaven vnos!")
+
+    input("\nPritisnite Enter za nadaljevanje...")
+
+
 # ==================== GLAVNA ZANKA ====================
 
 def main():
@@ -491,12 +827,28 @@ def main():
                 elif izbira == '3':
                     admin_delete_customer()
                 elif izbira == '4':
-                    admin_view_transactions()
+                    admin_view_accounts()
                 elif izbira == '5':
-                    admin_view_statistics()
+                    admin_add_account()
                 elif izbira == '6':
-                    logout()
+                    admin_delete_account()
                 elif izbira == '7':
+                    admin_change_package()
+                elif izbira == '8':
+                    admin_view_packages()
+                elif izbira == '9':
+                    admin_add_package()
+                elif izbira == '10':
+                    admin_edit_package()
+                elif izbira == '11':
+                    admin_delete_package()
+                elif izbira == '12':
+                    admin_view_transactions()
+                elif izbira == '13':
+                    admin_view_statistics()
+                elif izbira == '14':
+                    logout()
+                elif izbira == '15':
                     print("\n👋 Nasvidenje!")
                     sys.exit(0)
                 else:
