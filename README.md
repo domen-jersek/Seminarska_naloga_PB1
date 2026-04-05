@@ -22,7 +22,7 @@ Popolnoma funkcionalen bančni sistem z modernim spletnim vmesnikom (frontend) i
 ## ✨ Značilnosti
 
 ### Uporabniške funkcionalnosti
-- 🔐 **Prijava** - Enostavna prijava z ID stranke
+- 🔐 **Prijava** - Enostavna prijava z uporabniškim imenom in geslom stranke
 - 📊 **Nadzorna plošča** - Pregled vseh računov in stanja
 - 💳 **Upravljanje računov** - Pregled detajlov računa in zgodovine transakcij
 - 💸 **Nakazila** - Prenos denarja med računi

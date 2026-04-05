@@ -27,7 +27,7 @@ def get_connection():
 
 
 # Backwards compatibility - za obstojočo kodo
-conn = get_connection()
+# conn = get_connection()
 
 
 class Kazalec:
@@ -359,7 +359,7 @@ class Transakcija(Tabela, Entiteta):
     @classmethod
     def ustvari_tabelo(cls, cur=None):
         """
-        Ustvari tabelo "transkacija".
+        Ustvari tabelo "transakcija".
         """
         with Kazalec(cur) as cur:
             cur.execute("""
