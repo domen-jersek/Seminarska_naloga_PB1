@@ -6,14 +6,25 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from functools import wraps
 from datetime import datetime, timedelta
 import secrets
+import logging
 
 # Uvoz modela in storitev
-from model import conn, Kazalec, Stranka, Racun, Paket, Transakcija
+from model import Kazalec, Stranka, Racun, Paket, Transakcija
 from services import BankService
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler('banka.log'),  # shrani v datoteko
+        logging.StreamHandler()            # izpiše tudi v terminal
+    ]
+)
 
 # Inicializacija bančnih storitev
 bank = BankService()
@@ -540,6 +551,15 @@ def format_iban(iban):
     # Že ima presledke
     return iban
 
+@app.errorhandler(404)
+def not_found(e):
+    logging.warning(f"404 - stran ni najdena: {request.url}")
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_error(e):
+    logging.error(f"500 - interna napaka: {e} | URL: {request.url}")
+    return render_template('500.html'), 500
 
 @app.template_filter('format_datum')
 def format_datum(datum_str):

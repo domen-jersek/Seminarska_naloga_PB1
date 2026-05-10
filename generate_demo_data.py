@@ -3,20 +3,11 @@ Generiranje demo podatkov za testiranje bančnega sistema
 """
 import sqlite3
 import random
-import hashlib
-import os
 from datetime import datetime, timedelta
+from werkzeug.security import generate_password_hash
 
 conn = sqlite3.connect('Banka.db')
 cur = conn.cursor()
-
-
-def hash_geslo(geslo, sol=None):
-    """Hashira geslo s SHA-256 in soljo."""
-    if sol is None:
-        sol = os.urandom(16).hex()
-    h = hashlib.sha256((sol + geslo).encode('utf-8')).hexdigest()
-    return f"{sol}:{h}"
 
 
 def clear_data():
@@ -112,11 +103,11 @@ def generate_uporabniki():
         for src, dst in [('č', 'c'), ('š', 's'), ('ž', 'z'), ('ć', 'c'), ('đ', 'd')]:
             uporabnisko_ime = uporabnisko_ime.replace(src, dst)
         
-        geslo_hash = hash_geslo("geslo123")
+        geslo_hash = generate_password_hash("geslo123")
         uporabniki.append((uporabnisko_ime, geslo_hash, id_stranke, 'stranka'))
     
     # Admin uporabnik
-    admin_hash = hash_geslo("admin123")
+    admin_hash = generate_password_hash("admin123")
     uporabniki.append(("admin", admin_hash, None, 'admin'))
     
     cur.executemany("""

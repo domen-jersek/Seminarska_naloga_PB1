@@ -2,28 +2,21 @@
 Bančne storitve - vmesna plast med Flask aplikacijo in bazo podatkov
 """
 from model import get_connection, Kazalec, Stranka, Racun, Paket, Transakcija, Uporabnik
+from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 import hashlib
 import os
+import logging
 
 
-def hash_geslo(geslo, sol=None):
+def hash_geslo(geslo):
     """
-    Hashira geslo s SHA-256 in soljo.
-    Vrne 'sol:hash' string.
+    Heshira geslo z metodo scrypt
     """
-    if sol is None:
-        sol = os.urandom(16).hex()
-    h = hashlib.sha256((sol + geslo).encode('utf-8')).hexdigest()
-    return f"{sol}:{h}"
-
+    return generate_password_hash(geslo)
 
 def preveri_geslo(geslo, geslo_hash):
-    """
-    Preveri, če se geslo ujema s hashiranim geslom.
-    """
-    sol = geslo_hash.split(':')[0]
-    return hash_geslo(geslo, sol) == geslo_hash
+    return check_password_hash(geslo_hash, geslo)
 
 
 class BankService:
@@ -90,7 +83,8 @@ class BankService:
                     
                     return True, "Uporabnik uspešno ustvarjen"
         except Exception as e:
-            return False, f"Napaka pri ustvarjanju uporabnika: {str(e)}"
+            logging.error(f"Napaka pri ustvarjanju uporabnika: {e}")
+            return False, "Napaka pri ustvarjanju uporabnika"
     
     def change_password(self, id_uporabnika, staro_geslo, novo_geslo):
         """
@@ -118,7 +112,8 @@ class BankService:
                                (novo_hash, id_uporabnika))
                     return True, "Geslo uspešno spremenjeno"
         except Exception as e:
-            return False, f"Napaka: {str(e)}"
+            logging.error(f"Napaka pri spremembi gesla: {e}")
+            return False, "Napaka pri spremembi gesla"
     
     def delete_uporabnik_za_stranko(self, id_stranke):
         """Izbriši uporabnika, ki pripada stranki"""
@@ -128,7 +123,8 @@ class BankService:
                     cur.execute("DELETE FROM uporabnik WHERE id_stranke = ?", (id_stranke,))
                     return True, "Uporabnik izbrisan"
         except Exception as e:
-            return False, f"Napaka: {str(e)}"
+            logging.error(f"Napaka pri brisanju uporabnika: {e}")
+            return False, "Napaka pri brisanju uporabnika"
 
     # ==================== STRANKE ====================
     
@@ -318,7 +314,8 @@ class BankService:
                     return True, f"Nakazilo {amount_cents/100:.2f} EUR uspešno!"
                     
         except Exception as e:
-            return False, f"Napaka: {str(e)}"
+            logging.error(f"Napaka pri nakazilu: {e}")
+            return False, "Napaka pri nakazilu"
     
     def create_deposit(self, iban, amount_cents):
         """
@@ -351,7 +348,8 @@ class BankService:
                     return True, f"Polog {amount_cents/100:.2f} EUR uspešen!"
                     
         except Exception as e:
-            return False, f"Napaka: {str(e)}"
+            logging.error(f"Napaka pri pologu: {e}")
+            return False, "Napaka pri pologu"
     
     def create_withdrawal(self, iban, amount_cents):
         """
@@ -403,7 +401,8 @@ class BankService:
                     return True, f"Dvig {amount_cents/100:.2f} EUR uspešen!"
                     
         except Exception as e:
-            return False, f"Napaka: {str(e)}"
+            logging.error(f"Napaka pri dvigu: {e}")
+            return False, "Napaka pri dvigu"
     
     # Admin funkcije
     
@@ -519,7 +518,8 @@ class BankService:
                     id_stranke = cur.lastrowid
                     return True, "Stranka uspešno dodana", id_stranke
         except Exception as e:
-            return False, f"Napaka pri dodajanju stranke: {str(e)}", None
+            logging.error(f"Napaka pri dodajanju stranke: {e}")
+            return False, "Napaka pri dodajanju stranke", None
 
     # ==================== RAČUNI (Admin) ====================
 
@@ -607,7 +607,9 @@ class BankService:
                     
                     return True, f"Račun {iban} uspešno ustvarjen"
         except Exception as e:
-            return False, f"Napaka pri ustvarjanju računa: {str(e)}"
+            logging.error(f"Napaka pri ustvarjanju računa: {e}")
+            return False, "Napaka pri ustvarjanju računa"
+
 
     def generate_iban(self):
         """Generiraj naključen edinstven IBAN (19 znakov, SI56...)"""
@@ -644,8 +646,8 @@ class BankService:
                     
                     return True, f"Račun {iban} uspešno izbrisan"
         except Exception as e:
-            return False, f"Napaka pri brisanju računa: {str(e)}"
-
+            logging.error(f"Napaka pri brisanju računa: {e}")
+            return False, "Napaka pri brisanju računa"
     def update_racun_paket(self, iban, id_paket):
         """
         Spremeni paket za račun.
@@ -666,7 +668,8 @@ class BankService:
                     cur.execute("UPDATE racun SET id_paket = ? WHERE IBAN = ?", (id_paket, iban))
                     return True, "Paket uspešno spremenjen"
         except Exception as e:
-            return False, f"Napaka: {str(e)}"
+            logging.error(f"Napaka pri spremembi paketa: {e}")
+            return False, "Napaka pri spremembi paketa"
 
     # ==================== PAKETI (Admin) ====================
 
@@ -697,7 +700,8 @@ class BankService:
                     id_paket = cur.lastrowid
                     return True, f"Paket '{tip}' uspešno dodan", id_paket
         except Exception as e:
-            return False, f"Napaka pri dodajanju paketa: {str(e)}", None
+            logging.error(f"Napaka pri dodajanju paketa: {e}")
+            return False, "Napaka pri dodajanju paketa", None
 
     def update_paket(self, id_paket, tip, cena, osnovni_limit, dnevni_limit):
         """
@@ -730,7 +734,8 @@ class BankService:
                     
                     return True, "Paket uspešno posodobljen"
         except Exception as e:
-            return False, f"Napaka pri posodabljanju paketa: {str(e)}"
+            logging.error(f"Napaka pri posodabljanju paketa: {e}")
+            return False, "Napaka pri posodabljanju paketa"
 
     def delete_paket(self, id_paket):
         """
@@ -754,7 +759,8 @@ class BankService:
                     cur.execute("DELETE FROM paket WHERE id_paket = ?", (id_paket,))
                     return True, "Paket uspešno izbrisan"
         except Exception as e:
-            return False, f"Napaka pri brisanju paketa: {str(e)}"
+            logging.error(f"Napaka pri brisanju paketa: {e}")
+            return False, "Napaka pri brisanju paketa"
     
     def delete_stranka(self, id_stranke):
         """
@@ -789,7 +795,8 @@ class BankService:
                     
                     return True, "Stranka in vsi povezani podatki uspešno izbrisani"
         except Exception as e:
-            return False, f"Napaka pri brisanju stranke: {str(e)}"
+            logging.error(f"Napaka pri brisanju stranke: {e}")
+            return False, "Napaka pri brisanju stranke"
     
     def update_stranka(self, id_stranke, ime, priimek, naslov, datum_rojstva):
         """
@@ -822,4 +829,5 @@ class BankService:
                     
                     return True, "Podatki stranke uspešno posodobljeni"
         except Exception as e:
-            return False, f"Napaka pri posodabljanju stranke: {str(e)}"
+            logging.error(f"Napaka pri posodabljanju stranke: {e}")
+            return False, "Napaka pri posodabljanju stranke"
