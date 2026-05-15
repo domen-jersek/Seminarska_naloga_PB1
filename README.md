@@ -1,4 +1,4 @@
-# 🏦 Slovenia Bank - Bančni Sistem
+# Slovenia Bank - Bančni Sistem
 
 Seminarska naloga za predmet Podatkovne Baze 1 (PB1).
 
@@ -6,7 +6,7 @@ Popolnoma funkcionalen bančni sistem z modernim spletnim vmesnikom (frontend) i
 
 ---
 
-## 📋 Vsebina
+## Vsebina
 
 - [Značilnosti](#-značilnosti)
 - [Tehnologije](#-tehnologije)
@@ -14,120 +14,86 @@ Popolnoma funkcionalen bančni sistem z modernim spletnim vmesnikom (frontend) i
 - [Zagon aplikacije](#-zagon-aplikacije)
 - [Uporaba](#-uporaba)
 - [Struktura projekta](#-struktura-projekta)
-- [API Endpoints](#-api-endpoints)
+- [Končne točke API-ja](#-končne-točke-api-ja)
 - [Podatkovni model](#-podatkovni-model)
 
 ---
 
-## ✨ Značilnosti
+## Značilnosti
 
-### Uporabniške funkcionalnosti
-- 🔐 **Prijava** - Enostavna prijava z uporabniškim imenom in geslom stranke
-- 📊 **Nadzorna plošča** - Pregled vseh računov in stanja
-- 💳 **Upravljanje računov** - Pregled detajlov računa in zgodovine transakcij
-- 💸 **Nakazila** - Prenos denarja med računi
-- 💰 **Pologi in dvigi** - Dodajanje ali dvig denarja
-- 📦 **Bančni paketi** - Različni paketi z različnimi limiti
-- 🔄 **Zgodovina transakcij** - Popoln pregled vseh transakcij
+**Uporabnik**
+- Prijava z ID ali uporabniškim imenom + geslom
+- Nadzorna plošča s stanjem računov
+- Upravljanje računov + zgodovina transakcij
+- Nakazila, pologi, dvigi
+- Bančni paketi z različnimi limiti
 
-### Admin funkcionalnosti
-- 📈 **Admin dashboard** - Statistika in pregled sistema
-- 👥 **Upravljanje strank** - Pregled vseh strank in njihovih računov
-- 📝 **Pregled transakcij** - Vse transakcije v sistemu
-- 📊 **Statistika** - Številke in analitika poslovanja
+**Administrator**
+- Admin nadzorna plošča s statistiko
+- Upravljanje strank in pregled vseh transakcij
 
-### Varnostne funkcionalnosti
-- ✅ Preverjanje lastništva računov
-- ✅ Dnevni limiti transakcij
-- ✅ Preverjanje zadostnih sredstev
-- ✅ Validacija IBAN številk
-- ✅ Session management
+**Varnost**
+- Preverjanje lastništva računov
+- Dnevni limiti transakcij
+- Preverjanje zadostnih sredstev
+- Validacija IBAN
+- Upravljanje sej
 
 ---
 
-## 🛠 Tehnologije
+## Tehnologije
 
-### Backend
-- **Python 3.8+**
-- **Flask 3.0** - Web framework
-- **SQLite3** - Relacijska baza podatkov
-- **Werkzeug** - WSGI utilities
-
-### Frontend
-- **HTML5/CSS3**
-- **Bootstrap 5.3** - Responsive design
-- **Bootstrap Icons** - Ikone
-- **JavaScript (Vanilla)** - Interaktivnost
-- **Fetch API** - AJAX calls
+Python 3.8+, Flask 3.0, SQLite3, Bootstrap 5.3, JavaScript (Fetch API)
 
 ---
 
-## 📥 Namestitev
+## Namestitev
 
-### 1. Klonirajte repozitorij ali prenesite datoteke
+1. Klonirajte repozitorij:
+   git clone https://github.com/domen-jersek/Seminarska_naloga_PB1
 
+2. Namestite potrebne pakete:
+   pip install -r requirements.txt
 
-### 2. Namestite potrebne Python pakete
+3. Ustvarite bazo:
+   python model.py
 
-```powershell
-pip install -r requirements.txt
-```
-
-### 3. Ustvarite bazo podatkov
-
-Če baza `Banka.db` še ne obstaja, jo ustvarite:
-
-```powershell
-python model.py
-```
-
-To bo ustvarilo prazno bazo z vsemi tabelami.
-
-### 4. Generirajte testne podatke (opcijsko)
-
-Če želite generirati testne podatke strank, računov in transakcij:
-
-```powershell
-python generate_demo_data.py
-```
+4. (Opcijsko) Generirajte testne podatke:
+   python generate_demo_data.py
 
 ---
 
-## 🚀 Zagon aplikacije
-
-### Zagon Flask strežnika
+## Zagon
 
 ```powershell
 python app.py
 ```
 
-Aplikacija bo dostopna na: **http://localhost:5000**
-
-### Alternativa - Debug način
-
-Za development mode z avtomatskim reloadom:
-
-```powershell
-$env:FLASK_APP="app.py"
-$env:FLASK_ENV="development"
-flask run
-```
+Aplikacija na: **http://localhost:5000**
 
 ---
 
-## 💻 Uporaba
+## Uporaba
 
-### Prijava kot stranka
+### Prijava
 
-1. Odprite **http://localhost:5000** v brskalniku
-2. Vnesite **ID stranke** (npr. `1`, `2`, `3`, ...)
-3. Kliknite **Prijava**
+**Stranka**
+1. Odprite http://localhost:5000
+2. Vnesite uporabniško ime (npr. `marko.novak`) ali ID stranke
+3. Vnesite geslo (`geslo123`)
+4. Kliknite Prijava
 
-### Prijava kot administrator
+**Administrator**
+1. Odprite http://localhost:5000
+2. Uporabniško ime: `admin`, geslo: `admin123`
+3. Kliknite Prijava
 
-1. Odprite **http://localhost:5000**
-2. Vnesite `admin` kot ID
-3. Dostop do admin panela
+### Testni podatki
+
+| Vrsta | Uporabniško ime | Geslo |
+|-------|----------------|-------|
+| Stranka | `marko.novak` | `geslo123` |
+| Administrator | `admin` | `admin123` |
 
 ### Primeri uporabe
 
@@ -146,7 +112,7 @@ flask run
 
 ---
 
-## 📁 Struktura projekta
+## Struktura projekta
 
 ```
 SN/
@@ -166,7 +132,7 @@ SN/
 │   ├── dashboard.html         # Nadzorna plošča
 │   ├── accounts.html          # Seznam računov
 │   ├── account_detail.html    # Detajli računa
-│   ├── transfer.html          # Nakazilo
+│   ├── transfer.html          # Nakazila
 │   ├── packages.html          # Bančni paketi
 │   │
 │   └── admin/                 # Admin predloge
@@ -183,33 +149,32 @@ SN/
 
 ---
 
-## 🔌 API Endpoints
+## Končne točke API-ja
 
-### Javni endpoints
-- `GET /` - Domača stran (redirect)
-- `GET/POST /login` - Prijava
-- `GET /logout` - Odjava
+- `GET /` – Domača stran (preusmeritev)
+- `GET/POST /login` – Prijava
+- `GET /logout` – Odjava
 
-### Uporabniški endpoints (zaščiteno)
-- `GET /dashboard` - Nadzorna plošča
-- `GET /accounts` - Seznam računov
-- `GET /account/<iban>` - Detajli računa
-- `GET/POST /transfer` - Nakazilo
-- `POST /deposit` - Polog
-- `POST /withdraw` - Dvig
-- `GET /packages` - Bančni paketi
+**Uporabniške (zaščitene)**
+- `GET /dashboard` – Nadzorna plošča
+- `GET /accounts` – Seznam računov
+- `GET /account/<iban>` – Detajli računa
+- `GET/POST /transfer` – Nakazilo
+- `POST /deposit` – Polog
+- `POST /withdraw` – Dvig
+- `GET /packages` – Bančni paketi
 
-### Admin endpoints (admin zaščita)
-- `GET /admin` - Admin dashboard
-- `GET /admin/customers` - Seznam strank
-- `GET /admin/transactions` - Seznam transakcij
+**Administratorske (zaščitene)**
+- `GET /admin` – Admin nadzorna plošča
+- `GET /admin/customers` – Seznam strank
+- `GET /admin/transactions` – Seznam transakcij
 
-### API endpoints
-- `GET /api/account/<iban>/balance` - Stanje računa
+**API**
+- `GET /api/account/<iban>/balance` – Stanje računa
 
 ---
 
-## 🗄 Podatkovni model
+## Podatkovni model
 
 ### Tabele
 
@@ -253,108 +218,66 @@ SN/
 ---
 
 
-## 🔒 Varnost
+## Varnost
 
-### Implementirane funkcije
-- Session management s Flask sessions
-- Login required decorators
-- Admin required decorators
+- Upravljanje sej s Flask sejami
+- Dekoratorji za zahtevano prijavo in administratorske pravice
 - Preverjanje lastništva računov
 - Validacija vnosnih podatkov
 - SQL injection zaščita (parametrizirane poizvedbe)
-- CSRF zaščita (preko Flask session)
-
-
-## 🧪 Testiranje
-
-### Testni podatki
-
-Če uporabljate `generacijaPodatkov.py`, dobite:
-- Naključne stranke s slovenskimi imeni in priimki
-- IBAN račune v slovenskem formatu
-- Različna stanja računov (Pareto distribucija)
-- Testne transakcije
-
-### Primer testne prijave
-```
-ID stranke: 1
-ID stranke: 2
-ID stranke: 3
-...
-Admin: admin
-```
+- CSRF zaščita (preko Flask seje)
 
 ---
 
-## 📊 Funkcionalnosti po modulih
-
-### `app.py` - Flask aplikacija
-- Routing in view funkcije
-- Session management
-- Template rendering
-- Error handling
-- Template filters (centi_v_eure, format_iban, format_datum)
-
-### `services.py` - Poslovna logika
-- `BankService` class
-- CRUD operacije za stranke, račune, pakete
-- Transakcijske funkcije (transfer, deposit, withdrawal)
-- Validacija in preverjanje limitov
-- Admin statistika
-
-### `model.py` - Podatkovni model
-- Definicije tabel (dataclass)
-- Ustvarjanje in brisanje tabel
-- Uvoz podatkov iz CSV
-- Kazalec (cursor) management
-- Foreign keys omogočeni
-
----
-
-## 🐛 Troubleshooting
+## Odpravljanje težav
 
 ### Baza se ne ustvari
 ```powershell
-# Pobrišite staro bazo in ustvarite novo
 Remove-Item Banka.db
 python model.py
 ```
 
-### Port 5000 je zaseden
+### vrata 5000 so zasedena
 ```powershell
-# Uporabite drug port
 python app.py --port 5001
 ```
 
-Ali v `app.py` spremenite:
+Ali v `app.py`:
 ```python
 app.run(debug=True, host='0.0.0.0', port=5001)
 ```
 
-### Napaka pri importu modula
+### Napaka pri uvozu modula
 ```powershell
-# Preverite Python pot
 $env:PYTHONPATH="."
 python app.py
 ```
 
 ---
 
-## 📝 Razvoj
+## Razvoj
 
-### Dodajanje nove funkcionalnosti
+Aplikacija sledi **tristopenjski arhitekturi**:
 
-1. **Backend** - Dodajte route v `app.py`
-2. **Service** - Dodajte metodo v `services.py`
-3. **Frontend** - Ustvarite/posodobite template
-4. **Styling** - Dodajte CSS v `style.css`
-5. **JavaScript** - Dodajte logiko v `main.js`
+| Nivo | Datoteka | Vloga |
+|------|----------|-------|
+| Pogled | `app.py` | Flask poti (routes), upravljanje sej, renderiranje predlog |
+| Storitev | `services.py` | Razred `BankService` – poslovna logika, validacija, transakcije |
+| Podatki | `model.py` | Definicije tabel, ORM, upravljanje povezav z bazo |
 
+**Dodajanje funkcionalnosti:**
 
-## 📄 Licenca
-
-Projekt je namenjen za izobraževalne namene v okviru predmeta PB1.
+1. **Nova stran** – Dodajte pot v `app.py` z zaščitnimi dekoratorji (`@login_required`, `@admin_required`). Uporabite obstoječe predloge iz `templates/` ali ustvarite novo.
+2. **Nova poslovna operacija** – Implementirajte metodo v `services.py` (npr. avtomatsko polog obresti, mesečno poročilo). Preverite omejitve in pravice uporabnika.
+3. **Sprememba podatkovnega modela** – Posodobite tabele v `model.py`, nato ponovno ustvarite bazo. Posodobite ustrezne metode v `services.py`.
+4. **UI prilagoditve** – CSS v `static/css/style.css`, JavaScript interakcije v `static/js/main.js` (npr. dinamična validacija IBAN pred pošiljanjem).
 
 ---
 
-**Uživajte v uporabi Slovenia Bank sistema! 🏦**
+## Licenca
+
+Izobraževalni namen – predmet PB1.
+
+---
+
+**Uživajte v uporabi Slovenia Bank sistema!**
