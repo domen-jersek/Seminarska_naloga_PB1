@@ -245,7 +245,7 @@ class Paket(Tabela, Entiteta):
     id_paket: int = field(default=None)
     tip: str = field(default=None)
     cena: int = field(default=None)
-    osnovni_limit: int = field(default=None)
+    transakcijski_limit: int = field(default=None)
     dnevni_limit: int = field(default=None)
 
     VIR = "paket.csv"
@@ -262,7 +262,7 @@ class Paket(Tabela, Entiteta):
                     id_paket  INTEGER PRIMARY KEY,
                     tip       TEXT     NOT NULL UNIQUE,
                     cena      INTEGER  NOT NULL,
-                    osnovni_limit  INTEGER,
+                    transakcijski_limit  INTEGER,
                     dnevni_limit   INTEGER  NOT NULL
                     
                 );
@@ -285,8 +285,8 @@ class Paket(Tabela, Entiteta):
         """
         with Kazalec(cur) as cur:
             cur.executemany("""
-                INSERT INTO paket (id_paket, tip, cena, osnovni_limit, dnevni_limit)
-                VALUES (:id_paket, :tip, :cena, :osnovni_limit, :dnevni_limit);
+                INSERT INTO paket (id_paket, tip, cena, transakcijski_limit, dnevni_limit)
+                VALUES (:id_paket, :tip, :cena, :transakcijski_limit, :dnevni_limit);
             """, cls.preberi_vir())
 
 @dataclass

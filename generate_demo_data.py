@@ -60,7 +60,7 @@ def generate_racuni():
     cur.execute("SELECT COUNT(*) FROM paket")
     if cur.fetchone()[0] == 0:
         cur.executemany("""
-            INSERT INTO paket (id_paket, tip, cena, osnovni_limit, dnevni_limit)
+            INSERT INTO paket (id_paket, tip, cena, transakcijski_limit, dnevni_limit)
             VALUES (?, ?, ?, ?, ?)
         """, paketi_tipi)
         conn.commit()

@@ -133,19 +133,19 @@ print("Računi so")
 
 # 3. PAKETI
 with open("podatki/paket.csv", "w", newline="", encoding="utf-8") as f:
-    writer = csv.DictWriter(f, fieldnames=["id_paket", "tip", "cena", "osnovni_limit", "dnevni_limit"])
+    writer = csv.DictWriter(f, fieldnames=["id_paket", "tip", "cena", "transakcijski_limit", "dnevni_limit"])
     writer.writeheader()
-    # tip: [cena, osnovni limit, dnevni limit]
+    # tip: [cena, transakcijski limit, dnevni limit]
     paketi = {"študentski": [0, 20000, 150000], "premium": [1540, 400000, 200000], "osnovni": [599, 70000, 150000], "aktivni": [999, 150000, 150000], "digitalni": [99, None, 150000]}
     for i, tip in enumerate(paketi.keys()):
         cena = paketi[tip][0]
-        osnovni_limit = paketi[tip][1]
+        transakcijski_limit = paketi[tip][1]
         dnevni_limit = paketi[tip][2]
         row = {
             "id_paket": i+1,
             "tip": tip,
             "cena": cena,
-            "osnovni_limit": osnovni_limit if osnovni_limit is not None else "", # "" pomeni: ni limita
+            "transakcijski_limit": transakcijski_limit if transakcijski_limit is not None else "", # "" pomeni: ni limita
             "dnevni_limit": dnevni_limit
         }
         writer.writerow(row)

@@ -195,7 +195,7 @@ SN/
 - `id_racuna` (FOREIGN KEY → racun)
 - `tip` (Basic, Premium, Business)
 - `cena` (v centih)
-- `osnovni_limit` (v centih)
+- `transakcijski_limit` (v centih)
 - `dnevni_limit` (v centih)
 
 #### `transkacija`

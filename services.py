@@ -187,7 +187,7 @@ class BankService:
         """Pridobi paket za račun"""
         with Kazalec() as cur:
             cur.execute("""
-                SELECT p.id_paket, p.tip, p.cena, p.osnovni_limit, p.dnevni_limit
+                SELECT p.id_paket, p.tip, p.cena, p.transakcijski_limit, p.dnevni_limit
                 FROM paket p
                 JOIN racun r ON r.id_paket = p.id_paket
                 WHERE r.IBAN = ?
@@ -198,7 +198,7 @@ class BankService:
                     'id_paket': row[0],
                     'tip': row[1],
                     'cena': row[2],
-                    'osnovni_limit': row[3],
+                    'transakcijski_limit': row[3],
                     'dnevni_limit': row[4]
                 }
             return None
@@ -553,7 +553,7 @@ class BankService:
         """Pridobi vse pakete"""
         with Kazalec() as cur:
             cur.execute("""
-                SELECT id_paket, tip, cena, osnovni_limit, dnevni_limit
+                SELECT id_paket, tip, cena, transakcijski_limit, dnevni_limit
                 FROM paket
                 ORDER BY id_paket
             """)
@@ -563,7 +563,7 @@ class BankService:
                     'id_paket': row[0],
                     'tip': row[1],
                     'cena': row[2],
-                    'osnovni_limit': row[3],
+                    'transakcijski_limit': row[3],
                     'dnevni_limit': row[4]
                 }
                 for row in rows
@@ -673,7 +673,7 @@ class BankService:
 
     # ==================== PAKETI (Admin) ====================
 
-    def add_paket(self, tip, cena, osnovni_limit, dnevni_limit):
+    def add_paket(self, tip, cena, transakcijski_limit, dnevni_limit):
         """
         Dodaj nov paket.
         
@@ -693,9 +693,9 @@ class BankService:
                         return False, "Paket s tem tipom že obstaja", None
                     
                     cur.execute("""
-                        INSERT INTO paket (tip, cena, osnovni_limit, dnevni_limit)
+                        INSERT INTO paket (tip, cena, transakcijski_limit, dnevni_limit)
                         VALUES (?, ?, ?, ?)
-                    """, (tip.strip(), cena, osnovni_limit, dnevni_limit))
+                    """, (tip.strip(), cena, transakcijski_limit, dnevni_limit))
                     
                     id_paket = cur.lastrowid
                     return True, f"Paket '{tip}' uspešno dodan", id_paket
@@ -703,7 +703,7 @@ class BankService:
             logging.error(f"Napaka pri dodajanju paketa: {e}")
             return False, "Napaka pri dodajanju paketa", None
 
-    def update_paket(self, id_paket, tip, cena, osnovni_limit, dnevni_limit):
+    def update_paket(self, id_paket, tip, cena, transakcijski_limit, dnevni_limit):
         """
         Posodobi obstoječ paket.
         
@@ -728,9 +728,9 @@ class BankService:
                         return False, "Paket s tem tipom že obstaja"
                     
                     cur.execute("""
-                        UPDATE paket SET tip = ?, cena = ?, osnovni_limit = ?, dnevni_limit = ?
+                        UPDATE paket SET tip = ?, cena = ?, transakcijski_limit = ?, dnevni_limit = ?
                         WHERE id_paket = ?
-                    """, (tip.strip(), cena, osnovni_limit, dnevni_limit, id_paket))
+                    """, (tip.strip(), cena, transakcijski_limit, dnevni_limit, id_paket))
                     
                     return True, "Paket uspešno posodobljen"
         except Exception as e:

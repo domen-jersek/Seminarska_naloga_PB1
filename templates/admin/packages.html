@@ -20,7 +20,7 @@
                             <th>ID</th>
                             <th>Tip</th>
                             <th>Cena (€/mesec)</th>
-                            <th>Osnovni limit (€)</th>
+                            <th>Transakcijski limit (€)</th>
                             <th>Dnevni limit (€)</th>
                             <th>Akcije</th>
                         </tr>
@@ -31,7 +31,7 @@
                             <td>{{ paket.id_paket }}</td>
                             <td><span class="badge bg-info">{{ paket.tip }}</span></td>
                             <td>{{ paket.cena | centi_v_eure }} €</td>
-                            <td>{% if paket.osnovni_limit %}{{ paket.osnovni_limit | centi_v_eure }} €{% else %}<span class="text-muted">Brez limita</span>{% endif %}</td>
+                            <td>{% if paket.transakcijski_limit %}{{ paket.transakcijski_limit | centi_v_eure }} €{% else %}<span class="text-muted">Brez limita</span>{% endif %}</td>
                             <td>{{ paket.dnevni_limit | centi_v_eure }} €</td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-primary"
@@ -75,8 +75,8 @@
                         <input type="number" class="form-control" name="cena" value="0" min="0" step="0.01" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Osnovni limit (EUR)</label>
-                        <input type="number" class="form-control" name="osnovni_limit" min="0" step="0.01"
+                        <label class="form-label">Transakcijski limit (EUR)</label>
+                        <input type="number" class="form-control" name="transakcijski_limit" min="0" step="0.01"
                                placeholder="Pustite prazno za brez limita">
                     </div>
                     <div class="mb-3">
@@ -115,9 +115,9 @@
                                value="{{ (paket.cena / 100) if paket.cena else 0 }}" min="0" step="0.01" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Osnovni limit (EUR)</label>
-                        <input type="number" class="form-control" name="osnovni_limit" 
-                               value="{{ (paket.osnovni_limit / 100) if paket.osnovni_limit else '' }}" 
+                        <label class="form-label">Transakcijski limit (EUR)</label>
+                        <input type="number" class="form-control" name="transakcijski_limit" 
+                               value="{{ (paket.transakcijski_limit / 100) if paket.transakcijski_limit else '' }}" 
                                min="0" step="0.01" placeholder="Pustite prazno za brez limita">
                     </div>
                     <div class="mb-3">

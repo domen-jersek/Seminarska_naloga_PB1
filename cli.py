@@ -157,7 +157,7 @@ def view_account_balance():
             print(f"Stanje: {racun['stanje'] / 100:.2f} €")
             if paket:
                 print(f"Paket: {paket['tip']}")
-                print(f"Osnovni limit: {paket['osnovni_limit'] / 100 if paket['osnovni_limit'] else 'Neomejen'}")
+                print(f"Transakcijski limit: {paket['transakcijski_limit'] / 100 if paket['transakcijski_limit'] else 'Neomejen'}")
                 print(f"Dnevni limit: {paket['dnevni_limit'] / 100 if paket['dnevni_limit'] else 'Neomejen'}")
             print(f"{'='*55}")
         else:
@@ -648,7 +648,7 @@ def admin_view_packages():
         print("-" * 62)
         for p in paketi:
             cena = f"{p['cena']/100:.2f} €" if p['cena'] else "brezpl."
-            osnov = f"{p['osnovni_limit']/100:.2f} €" if p['osnovni_limit'] else "brez"
+            osnov = f"{p['transakcijski_limit']/100:.2f} €" if p['transakcijski_limit'] else "brez"
             dnevni = f"{p['dnevni_limit']/100:.2f} €" if p['dnevni_limit'] else "brez"
             print(f"{p['id_paket']:<6} {p['tip']:<14} {cena:>10} {osnov:>14} {dnevni:>14}")
 
@@ -669,7 +669,7 @@ def admin_add_package():
         cena_vnos = input("Mesečna cena v EUR (0 za brezplačen): ").strip()
         cena_cents = int(float(cena_vnos) * 100) if cena_vnos else 0
 
-        osnov_vnos = input("Osnovni limit v EUR (prazno = brez limita): ").strip()
+        osnov_vnos = input("Transakcijski limit v EUR (prazno = brez limita): ").strip()
         osnov_cents = int(float(osnov_vnos) * 100) if osnov_vnos else None
 
         dnevni_vnos = input("Dnevni limit v EUR: ").strip()
@@ -705,7 +705,7 @@ def admin_edit_package():
     print("-" * 62)
     for p in paketi:
         cena = f"{p['cena']/100:.2f} €" if p['cena'] else "brezpl."
-        osnov = f"{p['osnovni_limit']/100:.2f} €" if p['osnovni_limit'] else "brez"
+        osnov = f"{p['transakcijski_limit']/100:.2f} €" if p['transakcijski_limit'] else "brez"
         dnevni = f"{p['dnevni_limit']/100:.2f} €" if p['dnevni_limit'] else "brez"
         print(f"{p['id_paket']:<6} {p['tip']:<14} {cena:>10} {osnov:>14} {dnevni:>14}")
 
@@ -728,10 +728,10 @@ def admin_edit_package():
         cena_vnos = input(f"Cena v EUR [{stara_cena_eur:.2f}]: ").strip()
         cena_cents = int(float(cena_vnos) * 100) if cena_vnos else stari['cena']
 
-        stari_osnov = stari['osnovni_limit'] / 100 if stari['osnovni_limit'] else ''
-        osnov_vnos = input(f"Osnovni limit v EUR [{stari_osnov if stari_osnov else 'brez'}]: ").strip()
+        stari_osnov = stari['transakcijski_limit'] / 100 if stari['transakcijski_limit'] else ''
+        osnov_vnos = input(f"Transakcijski limit v EUR [{stari_osnov if stari_osnov else 'brez'}]: ").strip()
         if osnov_vnos == '':
-            osnov_cents = stari['osnovni_limit']
+            osnov_cents = stari['transakcijski_limit']
         elif osnov_vnos.lower() in ('brez', '0'):
             osnov_cents = None
         else:
