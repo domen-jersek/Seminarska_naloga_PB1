@@ -1,29 +1,37 @@
 """
 Glavna Flask aplikacija za bančni sistem
 """
-import os
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for, flash
+
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    session,
+    redirect,
+    url_for,
+    flash,
+)
 from functools import wraps
 from datetime import datetime, timedelta
 import secrets
 import logging
 
 # Uvoz modela in storitev
-from model import Kazalec, Stranka, Racun, Paket, Transakcija
 from services import BankService
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(32)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=2)
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=2)
 
 
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s',
+    format="%(asctime)s %(levelname)s %(message)s",
     handlers=[
-        logging.FileHandler('banka.log'),  # shrani v datoteko
-        logging.StreamHandler()            # izpiše tudi v terminal
-    ]
+        logging.FileHandler("banka.log"),  # shrani v datoteko
+        logging.StreamHandler(),  # izpiše tudi v terminal
+    ],
 )
 
 # Inicializacija bančnih storitev
@@ -34,10 +42,11 @@ bank = BankService()
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Prosimo, prijavite se.', 'warning')
-            return redirect(url_for('login'))
+        if "user_id" not in session:
+            flash("Prosimo, prijavite se.", "warning")
+            return redirect(url_for("login"))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
@@ -45,533 +54,562 @@ def login_required(f):
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session or not session.get('is_admin'):
-            flash('Nimate dovoljenja za dostop.', 'danger')
-            return redirect(url_for('dashboard'))
+        if "user_id" not in session or not session.get("is_admin"):
+            flash("Nimate dovoljenja za dostop.", "danger")
+            return redirect(url_for("dashboard"))
         return f(*args, **kwargs)
+
     return decorated_function
 
 
-@app.route('/')
+@app.route("/")
 def index():
     """Domača stran - preusmeri na dashboard ali login"""
-    if 'user_id' in session:
-        return redirect(url_for('dashboard'))
-    return redirect(url_for('login'))
+    if "user_id" in session:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route("/login", methods=["GET", "POST"])
 def login():
     """Prijava uporabnika z uporabniškim imenom in geslom"""
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.get_json() if request.is_json else request.form
-        uporabnisko_ime = data.get('uporabnisko_ime', '').strip()
-        geslo = data.get('geslo', '')
-        
+        uporabnisko_ime = data.get("uporabnisko_ime", "").strip()
+        geslo = data.get("geslo", "")
+
         success, user_data, message = bank.authenticate(uporabnisko_ime, geslo)
-        
+
         if success:
-            session['user_id'] = user_data['id_stranke'] or user_data['id_uporabnika']
-            session['id_uporabnika'] = user_data['id_uporabnika']
-            session['is_admin'] = (user_data['vloga'] == 'admin')
-            
-            if user_data['vloga'] == 'admin':
-                session['name'] = 'Administrator'
-                redirect_url = url_for('admin_dashboard')
+            session["user_id"] = user_data["id_stranke"] or user_data["id_uporabnika"]
+            session["id_uporabnika"] = user_data["id_uporabnika"]
+            session["is_admin"] = user_data["vloga"] == "admin"
+
+            if user_data["vloga"] == "admin":
+                session["name"] = "Administrator"
+                redirect_url = url_for("admin_dashboard")
             else:
-                stranka = bank.get_stranka(user_data['id_stranke'])
-                session['name'] = f"{stranka.ime} {stranka.priimek}"
-                redirect_url = url_for('dashboard')
-            
-            return jsonify({'success': True, 'redirect': redirect_url})
+                stranka = bank.get_stranka(user_data["id_stranke"])
+                session["name"] = f"{stranka.ime} {stranka.priimek}"
+                redirect_url = url_for("dashboard")
+
+            return jsonify({"success": True, "redirect": redirect_url})
         else:
-            return jsonify({'success': False, 'message': message}), 401
-    
-    return render_template('login.html')
+            return jsonify({"success": False, "message": message}), 401
+
+    return render_template("login.html")
 
 
-@app.route('/logout')
+@app.route("/logout")
 def logout():
     """Odjava uporabnika"""
     session.clear()
-    flash('Uspešno ste se odjavili.', 'success')
-    return redirect(url_for('login'))
+    flash("Uspešno ste se odjavili.", "success")
+    return redirect(url_for("login"))
 
 
-@app.route('/dashboard')
+@app.route("/dashboard")
 @login_required
 def dashboard():
     """Glavna nadzorna plošča uporabnika"""
-    user_id = session['user_id']
-    
+    user_id = session["user_id"]
+
     # Pridobi podatke o stranki
     stranka = bank.get_stranka(user_id)
     if not stranka:
-        flash('Stranka ni najdena.', 'danger')
-        return redirect(url_for('logout'))
-    
+        flash("Stranka ni najdena.", "danger")
+        return redirect(url_for("logout"))
+
     # Pridobi vse račune stranke
     racuni = bank.get_racuni_stranke(user_id)
-    
+
     # Izračunaj skupno stanje
-    total_balance = sum(r['stanje'] for r in racuni)
-    
+    total_balance = sum(r["stanje"] for r in racuni)
+
     # Pridobi zadnje transakcije
     recent_transactions = bank.get_recent_transactions(user_id, limit=10)
-    
-    return render_template('dashboard.html',
-                         stranka=stranka,
-                         racuni=racuni,
-                         total_balance=total_balance,
-                         recent_transactions=recent_transactions)
+
+    return render_template(
+        "dashboard.html",
+        stranka=stranka,
+        racuni=racuni,
+        total_balance=total_balance,
+        recent_transactions=recent_transactions,
+    )
 
 
-@app.route('/accounts')
+@app.route("/accounts")
 @login_required
 def accounts():
     """Stran z vsemi računi"""
-    user_id = session['user_id']
+    user_id = session["user_id"]
     racuni = bank.get_racuni_stranke(user_id)
-    
+
     # Za vsak račun pridobi tudi paket
     for racun in racuni:
-        racun['paket'] = bank.get_paket_za_racun(racun['IBAN'])
-    
-    return render_template('accounts.html', racuni=racuni)
+        racun["paket"] = bank.get_paket_za_racun(racun["IBAN"])
+
+    return render_template("accounts.html", racuni=racuni)
 
 
-@app.route('/account/<iban>')
+@app.route("/account/<iban>")
 @login_required
 def account_detail(iban):
     """Detajli posameznega računa"""
-    user_id = session['user_id']
-    
+    user_id = session["user_id"]
+
     # Preveri, da račun pripada uporabniku
     racun = bank.get_racun(iban)
-    if not racun or racun['id_lastnik'] != user_id:
-        flash('Nimate dostopa do tega računa.', 'danger')
-        return redirect(url_for('accounts'))
-    
+    if not racun or racun["id_lastnik"] != user_id:
+        flash("Nimate dostopa do tega računa.", "danger")
+        return redirect(url_for("accounts"))
+
     # Pridobi transakcije za ta račun
     transactions = bank.get_transactions_for_account(iban)
     paket = bank.get_paket_za_racun(iban)
-    
-    return render_template('account_detail.html',
-                         racun=racun,
-                         transactions=transactions,
-                         paket=paket)
+
+    return render_template(
+        "account_detail.html", racun=racun, transactions=transactions, paket=paket
+    )
 
 
-@app.route('/transfer', methods=['GET', 'POST'])
+@app.route("/transfer", methods=["GET", "POST"])
 @login_required
 def transfer():
     """Nakazilo med računi"""
-    if request.method == 'POST':
+    if request.method == "POST":
         data = request.get_json()
-        from_iban = data.get('from_iban')
-        to_iban = data.get('to_iban')
-        amount = data.get('amount')
-        
+        from_iban = data.get("from_iban")
+        to_iban = data.get("to_iban")
+        amount = data.get("amount")
+
         try:
             amount_cents = int(float(amount) * 100)
-            
+
             # Preveri, da je pošiljatelj lastnik računa
             racun = bank.get_racun(from_iban)
-            if not racun or racun['id_lastnik'] != session['user_id']:
-                return jsonify({'success': False, 'message': 'Nimate dostopa do tega računa'}), 403
-            
+            if not racun or racun["id_lastnik"] != session["user_id"]:
+                return jsonify(
+                    {"success": False, "message": "Nimate dostopa do tega računa"}
+                ), 403
+
             # Izvedi nakazilo
             success, message = bank.create_transfer(from_iban, to_iban, amount_cents)
-            
+
             if success:
-                return jsonify({'success': True, 'message': message})
+                return jsonify({"success": True, "message": message})
             else:
-                return jsonify({'success': False, 'message': message}), 400
-                
+                return jsonify({"success": False, "message": message}), 400
+
         except ValueError:
-            return jsonify({'success': False, 'message': 'Napačen znesek'}), 400
-    
+            return jsonify({"success": False, "message": "Napačen znesek"}), 400
+
     # GET zahteva
-    user_id = session['user_id']
+    user_id = session["user_id"]
     racuni = bank.get_racuni_stranke(user_id)
-    return render_template('transfer.html', racuni=racuni)
+    return render_template("transfer.html", racuni=racuni)
 
 
-@app.route('/deposit', methods=['POST'])
+@app.route("/deposit", methods=["POST"])
 @login_required
 def deposit():
     """Polog denarja na račun"""
     data = request.get_json()
-    iban = data.get('iban')
-    amount = data.get('amount')
-    
+    iban = data.get("iban")
+    amount = data.get("amount")
+
     try:
         amount_cents = int(float(amount) * 100)
-        
+
         # Preveri lastništvo
         racun = bank.get_racun(iban)
-        if not racun or racun['id_lastnik'] != session['user_id']:
-            return jsonify({'success': False, 'message': 'Nimate dostopa'}), 403
-        
+        if not racun or racun["id_lastnik"] != session["user_id"]:
+            return jsonify({"success": False, "message": "Nimate dostopa"}), 403
+
         success, message = bank.create_deposit(iban, amount_cents)
-        
+
         if success:
-            return jsonify({'success': True, 'message': message})
+            return jsonify({"success": True, "message": message})
         else:
-            return jsonify({'success': False, 'message': message}), 400
-            
+            return jsonify({"success": False, "message": message}), 400
+
     except ValueError:
-        return jsonify({'success': False, 'message': 'Napačen znesek'}), 400
+        return jsonify({"success": False, "message": "Napačen znesek"}), 400
 
 
-@app.route('/withdraw', methods=['POST'])
+@app.route("/withdraw", methods=["POST"])
 @login_required
 def withdraw():
     """Dvig denarja z računa"""
     data = request.get_json()
-    iban = data.get('iban')
-    amount = data.get('amount')
-    
+    iban = data.get("iban")
+    amount = data.get("amount")
+
     try:
         amount_cents = int(float(amount) * 100)
-        
+
         # Preveri lastništvo
         racun = bank.get_racun(iban)
-        if not racun or racun['id_lastnik'] != session['user_id']:
-            return jsonify({'success': False, 'message': 'Nimate dostopa'}), 403
-        
+        if not racun or racun["id_lastnik"] != session["user_id"]:
+            return jsonify({"success": False, "message": "Nimate dostopa"}), 403
+
         success, message = bank.create_withdrawal(iban, amount_cents)
-        
+
         if success:
-            return jsonify({'success': True, 'message': message})
+            return jsonify({"success": True, "message": message})
         else:
-            return jsonify({'success': False, 'message': message}), 400
-            
+            return jsonify({"success": False, "message": message}), 400
+
     except ValueError:
-        return jsonify({'success': False, 'message': 'Napačen znesek'}), 400
+        return jsonify({"success": False, "message": "Napačen znesek"}), 400
 
 
-@app.route('/packages')
+@app.route("/packages")
 @login_required
 def packages():
     """Pregled paketov"""
     available_packages = [
         {
-            'tip': 'Basic',
-            'cena': 0,
-            'transakcijski_limit': 50000,  # 500 EUR
-            'dnevni_limit': 100000,   # 1000 EUR
-            'opis': 'Brezplačen osnovni paket za začetnike'
+            "tip": "Basic",
+            "cena": 0,
+            "osnovni_limit": 50000,  # 500 EUR
+            "dnevni_limit": 100000,  # 1000 EUR
+            "opis": "Brezplačen osnovni paket za začetnike",
         },
         {
-            'tip': 'Premium',
-            'cena': 599,  # 5.99 EUR
-            'transakcijski_limit': 200000,  # 2000 EUR
-            'dnevni_limit': 500000,   # 5000 EUR
-            'opis': 'Napredni paket za aktivne uporabnike'
+            "tip": "Premium",
+            "cena": 599,  # 5.99 EUR
+            "osnovni_limit": 200000,  # 2000 EUR
+            "dnevni_limit": 500000,  # 5000 EUR
+            "opis": "Napredni paket za aktivne uporabnike",
         },
         {
-            'tip': 'Business',
-            'cena': 1999,  # 19.99 EUR
-            'transakcijski_limit': None,  # Brez limita
-            'dnevni_limit': 1000000,  # 10000 EUR
-            'opis': 'Profesionalni paket za podjetja'
-        }
+            "tip": "Business",
+            "cena": 1999,  # 19.99 EUR
+            "osnovni_limit": None,  # Brez limita
+            "dnevni_limit": 1000000,  # 10000 EUR
+            "opis": "Profesionalni paket za podjetja",
+        },
     ]
-    
-    user_id = session['user_id']
+
+    user_id = session["user_id"]
     racuni = bank.get_racuni_stranke(user_id)
-    
+
     # Dodaj informacije o trenutnih paketih
     for racun in racuni:
-        racun['paket'] = bank.get_paket_za_racun(racun['IBAN'])
-    
-    return render_template('packages.html',
-                         available_packages=available_packages,
-                         racuni=racuni)
+        racun["paket"] = bank.get_paket_za_racun(racun["IBAN"])
+
+    return render_template(
+        "packages.html", available_packages=available_packages, racuni=racuni
+    )
 
 
-@app.route('/admin')
+@app.route("/admin")
 @admin_required
 def admin_dashboard():
     """Admin nadzorna plošča"""
     stats = bank.get_statistics()
-    return render_template('admin/dashboard.html', stats=stats)
+    return render_template("admin/dashboard.html", stats=stats)
 
 
-@app.route('/admin/customers')
+@app.route("/admin/customers")
 @admin_required
 def admin_customers():
     """Seznam vseh strank"""
     stranke = bank.get_all_stranke()
-    return render_template('admin/customers.html', stranke=stranke)
+    return render_template("admin/customers.html", stranke=stranke)
 
 
-@app.route('/admin/customers/add', methods=['POST'])
+@app.route("/admin/customers/add", methods=["POST"])
 @admin_required
 def admin_add_customer():
     """Dodaj novo stranko"""
-    ime = request.form.get('ime')
-    priimek = request.form.get('priimek')
-    naslov = request.form.get('naslov')
-    datum_rojstva = request.form.get('datum_rojstva')
-    uporabnisko_ime = request.form.get('uporabnisko_ime')
-    geslo = request.form.get('geslo')
-    
+    ime = request.form.get("ime")
+    priimek = request.form.get("priimek")
+    naslov = request.form.get("naslov")
+    datum_rojstva = request.form.get("datum_rojstva")
+    uporabnisko_ime = request.form.get("uporabnisko_ime")
+    geslo = request.form.get("geslo")
+
     success, message, id_stranke = bank.add_stranka(ime, priimek, naslov, datum_rojstva)
-    
+
     if success:
         # Ustvari tudi uporabniški račun
-        u_success, u_message = bank.create_uporabnik(uporabnisko_ime, geslo, id_stranke, 'stranka')
+        u_success, u_message = bank.create_uporabnik(
+            uporabnisko_ime, geslo, id_stranke, "stranka"
+        )
         if u_success:
-            flash(f'✅ {message} (ID: {id_stranke}) — uporabniški račun ustvarjen', 'success')
+            flash(
+                f"✅ {message} (ID: {id_stranke}) — uporabniški račun ustvarjen",
+                "success",
+            )
         else:
-            flash(f'⚠️ Stranka dodana (ID: {id_stranke}), vendar uporabnik NI ustvarjen: {u_message}', 'warning')
+            flash(
+                f"⚠️ Stranka dodana (ID: {id_stranke}), vendar uporabnik NI ustvarjen: {u_message}",
+                "warning",
+            )
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_customers'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_customers"))
 
 
-@app.route('/admin/customers/<int:id_stranke>/delete', methods=['POST'])
+@app.route("/admin/customers/<int:id_stranke>/delete", methods=["POST"])
 @admin_required
 def admin_delete_customer(id_stranke):
     """Izbriši stranko"""
     success, message = bank.delete_stranka(id_stranke)
-    
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_customers'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_customers"))
 
 
-@app.route('/admin/customers/<int:id_stranke>/edit', methods=['POST'])
+@app.route("/admin/customers/<int:id_stranke>/edit", methods=["POST"])
 @admin_required
 def admin_edit_customer(id_stranke):
     """Uredi podatke stranke"""
-    ime = request.form.get('ime')
-    priimek = request.form.get('priimek')
-    naslov = request.form.get('naslov')
-    datum_rojstva = request.form.get('datum_rojstva')
-    
-    success, message = bank.update_stranka(id_stranke, ime, priimek, naslov, datum_rojstva)
-    
+    ime = request.form.get("ime")
+    priimek = request.form.get("priimek")
+    naslov = request.form.get("naslov")
+    datum_rojstva = request.form.get("datum_rojstva")
+
+    success, message = bank.update_stranka(
+        id_stranke, ime, priimek, naslov, datum_rojstva
+    )
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_customers'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_customers"))
 
 
-@app.route('/admin/transactions')
+@app.route("/admin/transactions")
 @admin_required
 def admin_transactions():
     """Seznam vseh transakcij"""
     transactions = bank.get_all_transactions(limit=100)
-    return render_template('admin/transactions.html', transactions=transactions)
+    return render_template("admin/transactions.html", transactions=transactions)
 
 
 # ==================== ADMIN - RAČUNI ====================
 
-@app.route('/admin/accounts')
+
+@app.route("/admin/accounts")
 @admin_required
 def admin_accounts():
     """Seznam vseh računov"""
     racuni = bank.get_all_racuni()
     stranke = bank.get_all_stranke()
     paketi = bank.get_all_paketi()
-    return render_template('admin/accounts.html', racuni=racuni, stranke=stranke, paketi=paketi)
+    return render_template(
+        "admin/accounts.html", racuni=racuni, stranke=stranke, paketi=paketi
+    )
 
 
-@app.route('/admin/accounts/add', methods=['POST'])
+@app.route("/admin/accounts/add", methods=["POST"])
 @admin_required
 def admin_add_account():
     """Ustvari nov račun za stranko"""
-    id_lastnik = request.form.get('id_lastnik', type=int)
-    id_paket = request.form.get('id_paket', type=int)
-    stanje = request.form.get('stanje', '0')
-    
+    id_lastnik = request.form.get("id_lastnik", type=int)
+    id_paket = request.form.get("id_paket", type=int)
+    stanje = request.form.get("stanje", "0")
+
     try:
         stanje_cents = int(float(stanje) * 100)
     except ValueError:
         stanje_cents = 0
-    
+
     # Generiraj IBAN
     iban = bank.generate_iban()
     if not iban:
-        flash('❌ Ni mogoče generirati IBAN-a', 'danger')
-        return redirect(url_for('admin_accounts'))
-    
+        flash("❌ Ni mogoče generirati IBAN-a", "danger")
+        return redirect(url_for("admin_accounts"))
+
     success, message = bank.add_racun(iban, id_lastnik, id_paket, stanje_cents)
-    
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_accounts'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_accounts"))
 
 
-@app.route('/admin/accounts/<path:iban>/delete', methods=['POST'])
+@app.route("/admin/accounts/<path:iban>/delete", methods=["POST"])
 @admin_required
 def admin_delete_account(iban):
     """Izbriši račun"""
     success, message = bank.delete_racun(iban)
-    
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_accounts'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_accounts"))
 
 
-@app.route('/admin/accounts/<path:iban>/change-package', methods=['POST'])
+@app.route("/admin/accounts/<path:iban>/change-package", methods=["POST"])
 @admin_required
 def admin_change_package(iban):
     """Spremeni paket za račun"""
-    id_paket = request.form.get('id_paket', type=int)
-    
+    id_paket = request.form.get("id_paket", type=int)
+
     success, message = bank.update_racun_paket(iban, id_paket)
-    
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_accounts'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_accounts"))
 
 
 # ==================== ADMIN - PAKETI ====================
 
-@app.route('/admin/packages')
+
+@app.route("/admin/packages")
 @admin_required
 def admin_packages():
     """Seznam vseh paketov"""
     paketi = bank.get_all_paketi()
-    return render_template('admin/packages.html', paketi=paketi)
+    return render_template("admin/packages.html", paketi=paketi)
 
 
-@app.route('/admin/packages/add', methods=['POST'])
+@app.route("/admin/packages/add", methods=["POST"])
 @admin_required
 def admin_add_package():
     """Dodaj nov paket"""
-    tip = request.form.get('tip')
-    cena = request.form.get('cena', '0')
-    transakcijski_limit = request.form.get('transakcijski_limit', '')
-    dnevni_limit = request.form.get('dnevni_limit', '0')
-    
+    tip = request.form.get("tip")
+    cena = request.form.get("cena", "0")
+    osnovni_limit = request.form.get("osnovni_limit", "")
+    dnevni_limit = request.form.get("dnevni_limit", "0")
+
     try:
         cena_cents = int(float(cena) * 100)
         dnevni_limit_cents = int(float(dnevni_limit) * 100)
-        osnovni_limit_cents = int(float(transakcijski_limit) * 100) if transakcijski_limit else None
+        osnovni_limit_cents = (
+            int(float(osnovni_limit) * 100) if osnovni_limit else None
+        )
     except ValueError:
-        flash('❌ Napačen format zneska', 'danger')
-        return redirect(url_for('admin_packages'))
-    
-    success, message, _ = bank.add_paket(tip, cena_cents, osnovni_limit_cents, dnevni_limit_cents)
-    
+        flash("❌ Napačen format zneska", "danger")
+        return redirect(url_for("admin_packages"))
+
+    success, message, _ = bank.add_paket(
+        tip, cena_cents, osnovni_limit_cents, dnevni_limit_cents
+    )
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_packages'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_packages"))
 
 
-@app.route('/admin/packages/<int:id_paket>/edit', methods=['POST'])
+@app.route("/admin/packages/<int:id_paket>/edit", methods=["POST"])
 @admin_required
 def admin_edit_package(id_paket):
     """Uredi paket"""
-    tip = request.form.get('tip')
-    cena = request.form.get('cena', '0')
-    transakcijski_limit = request.form.get('transakcijski_limit', '')
-    dnevni_limit = request.form.get('dnevni_limit', '0')
-    
+    tip = request.form.get("tip")
+    cena = request.form.get("cena", "0")
+    osnovni_limit = request.form.get("osnovni_limit", "")
+    dnevni_limit = request.form.get("dnevni_limit", "0")
+
     try:
         cena_cents = int(float(cena) * 100)
         dnevni_limit_cents = int(float(dnevni_limit) * 100)
-        osnovni_limit_cents = int(float(transakcijski_limit) * 100) if transakcijski_limit else None
+        osnovni_limit_cents = (
+            int(float(osnovni_limit) * 100) if osnovni_limit else None
+        )
     except ValueError:
-        flash('❌ Napačen format zneska', 'danger')
-        return redirect(url_for('admin_packages'))
-    
-    success, message = bank.update_paket(id_paket, tip, cena_cents, osnovni_limit_cents, dnevni_limit_cents)
-    
+        flash("❌ Napačen format zneska", "danger")
+        return redirect(url_for("admin_packages"))
+
+    success, message = bank.update_paket(
+        id_paket, tip, cena_cents, osnovni_limit_cents, dnevni_limit_cents
+    )
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_packages'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_packages"))
 
 
-@app.route('/admin/packages/<int:id_paket>/delete', methods=['POST'])
+@app.route("/admin/packages/<int:id_paket>/delete", methods=["POST"])
 @admin_required
 def admin_delete_package(id_paket):
     """Izbriši paket"""
     success, message = bank.delete_paket(id_paket)
-    
+
     if success:
-        flash(f'✅ {message}', 'success')
+        flash(f"✅ {message}", "success")
     else:
-        flash(f'❌ {message}', 'danger')
-    
-    return redirect(url_for('admin_packages'))
+        flash(f"❌ {message}", "danger")
+
+    return redirect(url_for("admin_packages"))
 
 
-@app.route('/api/account/<iban>/balance')
+@app.route("/api/account/<iban>/balance")
 @login_required
 def api_account_balance(iban):
     """API endpoint za stanje računa"""
     racun = bank.get_racun(iban)
-    if not racun or racun['id_lastnik'] != session['user_id']:
-        return jsonify({'error': 'Nimate dostopa'}), 403
-    
-    return jsonify({'balance': racun['stanje']})
+    if not racun or racun["id_lastnik"] != session["user_id"]:
+        return jsonify({"error": "Nimate dostopa"}), 403
+
+    return jsonify({"balance": racun["stanje"]})
 
 
 # Template filters
-@app.template_filter('centi_v_eure')
+@app.template_filter("centi_v_eure")
 def centi_v_eure(centi):
     """Pretvori cente v eure"""
     if centi is None:
-        return '0.00'
+        return "0.00"
     return f"{centi / 100:.2f}"
 
 
-@app.template_filter('format_iban')
+@app.template_filter("format_iban")
 def format_iban(iban):
     """Formatiraj IBAN za prikaz"""
     if not iban:
-        return ''
+        return ""
     # Že ima presledke
     return iban
+
 
 @app.errorhandler(404)
 def not_found(e):
     logging.warning(f"404 - stran ni najdena: {request.url}")
-    return render_template('404.html'), 404
+    return render_template("404.html"), 404
+
 
 @app.errorhandler(500)
 def internal_error(e):
     logging.error(f"500 - interna napaka: {e} | URL: {request.url}")
-    return render_template('500.html'), 500
+    return render_template("500.html"), 500
 
-@app.template_filter('format_datum')
+
+@app.template_filter("format_datum")
 def format_datum(datum_str):
     """Formatiraj datum"""
     if not datum_str:
-        return ''
+        return ""
     try:
-        dt = datetime.fromisoformat(datum_str.replace(' ', 'T'))
-        return dt.strftime('%d.%m.%Y %H:%M')
+        dt = datetime.fromisoformat(datum_str.replace(" ", "T"))
+        return dt.strftime("%d.%m.%Y %H:%M")
     except:
         return datum_str
 
 
-if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+if __name__ == "__main__":
+    app.run(debug=True, host="0.0.0.0", port=5000)

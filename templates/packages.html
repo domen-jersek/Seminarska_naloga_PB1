@@ -26,8 +26,8 @@
                         </li>
                         <li class="mb-2">
                             <i class="bi bi-check-circle text-success"></i>
-                            {% if paket.transakcijski_limit %}
-                            Transakcijski limit: <strong>{{ paket.transakcijski_limit | centi_v_eure }} €</strong>
+                            {% if paket.osnovni_limit %}
+                            Transakcijski limit: <strong>{{ paket.osnovni_limit | centi_v_eure }} €</strong>
                             {% else %}
                             <strong>Brez limitov</strong>
                             {% endif %}

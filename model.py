@@ -1,7 +1,7 @@
 #
 #   Model za delo z bazo Banka.db
 #
-#   
+#
 #   Prirejeno po J. Vidali, nov. 2024, M. Pretnar, 2019, M. Lokar, dec. 2020
 #
 
@@ -20,8 +20,8 @@ def get_connection():
     Dobi thread-safe database povezavo.
     Vsak thread ima svojo povezavo.
     """
-    if not hasattr(_thread_local, 'conn'):
-        _thread_local.conn = dbapi.connect('Banka.db', check_same_thread=False)
+    if not hasattr(_thread_local, "conn"):
+        _thread_local.conn = dbapi.connect("Banka.db", check_same_thread=False)
         _thread_local.conn.execute("PRAGMA foreign_keys = ON;")
     return _thread_local.conn
 
@@ -107,13 +107,14 @@ class Entiteta:
     """
     Nadrazred za posamezne entitetne tipe.
     """
+
     def __bool__(self):
         """
         Pretvorba v logično vrednost.
         Preveri, če je primarni ključ (prvi atribut) nastavljen.
         """
         # Dobi ime prvega polja iz dataclass
-        if hasattr(self, '__dataclass_fields__'):
+        if hasattr(self, "__dataclass_fields__"):
             first_field = next(iter(self.__dataclass_fields__))
             return getattr(self, first_field) is not None
         return True
@@ -122,10 +123,12 @@ class Entiteta:
         """
         Znakovna predstavitev.
         """
-        if hasattr(self, '__dataclass_fields__'):
+        if hasattr(self, "__dataclass_fields__"):
             first_field = next(iter(self.__dataclass_fields__))
             value = getattr(self, first_field)
-            return str(value) if value is not None else f"<entiteta tipa {self.__class__}>"
+            return (
+                str(value) if value is not None else f"<entiteta tipa {self.__class__}>"
+            )
         return f"<entiteta tipa {self.__class__}>"
 
     def __init_subclass__(cls, /, **kwargs):
@@ -149,9 +152,9 @@ class Stranka(Tabela, Entiteta):
     priimek: str = field(default=None)
     naslov: str = field(default=None)
     datum_rojstva: str = field(default=None)
-    
+
     VIR = "stranka.csv"
-    IME = 'stranka'
+    IME = "stranka"
 
     @classmethod
     def ustvari_tabelo(cls, cur=None):
@@ -178,17 +181,20 @@ class Stranka(Tabela, Entiteta):
             cur.execute("""
                 DROP TABLE IF EXISTS stranka;
             """)
-    
+
     @classmethod
     def uvozi_podatke(cls, cur=None):
         """
         Uvozi podatke v tabelo "stranka".
         """
         with Kazalec(cur) as cur:
-            cur.executemany("""
+            cur.executemany(
+                """
                 INSERT INTO stranka (id_stranke, ime, priimek, naslov, datum_rojstva)
                 VALUES (:id_stranke, :ime, :priimek, :naslov, :datum_rojstva);
-            """, cls.preberi_vir())
+            """,
+                cls.preberi_vir(),
+            )
 
 
 @dataclass
@@ -204,7 +210,7 @@ class Uporabnik(Tabela, Entiteta):
     id_stranke: int = field(default=None)
     vloga: str = field(default=None)
 
-    IME = 'uporabnik'
+    IME = "uporabnik"
 
     @classmethod
     def ustvari_tabelo(cls, cur=None):
@@ -236,6 +242,7 @@ class Uporabnik(Tabela, Entiteta):
     def uvozi_podatke(cls, cur=None):
         pass
 
+
 @dataclass
 class Paket(Tabela, Entiteta):
     """
@@ -245,11 +252,11 @@ class Paket(Tabela, Entiteta):
     id_paket: int = field(default=None)
     tip: str = field(default=None)
     cena: int = field(default=None)
-    transakcijski_limit: int = field(default=None)
+    osnovni_limit: int = field(default=None)
     dnevni_limit: int = field(default=None)
 
     VIR = "paket.csv"
-    IME = 'paket'
+    IME = "paket"
 
     @classmethod
     def ustvari_tabelo(cls, cur=None):
@@ -262,7 +269,7 @@ class Paket(Tabela, Entiteta):
                     id_paket  INTEGER PRIMARY KEY,
                     tip       TEXT     NOT NULL UNIQUE,
                     cena      INTEGER  NOT NULL,
-                    transakcijski_limit  INTEGER,
+                    osnovni_limit  INTEGER,
                     dnevni_limit   INTEGER  NOT NULL
                     
                 );
@@ -284,10 +291,14 @@ class Paket(Tabela, Entiteta):
         Uvozi podatke v tabelo "paket".
         """
         with Kazalec(cur) as cur:
-            cur.executemany("""
-                INSERT INTO paket (id_paket, tip, cena, transakcijski_limit, dnevni_limit)
-                VALUES (:id_paket, :tip, :cena, :transakcijski_limit, :dnevni_limit);
-            """, cls.preberi_vir())
+            cur.executemany(
+                """
+                INSERT INTO paket (id_paket, tip, cena, osnovni_limit, dnevni_limit)
+                VALUES (:id_paket, :tip, :cena, :osnovni_limit, :dnevni_limit);
+            """,
+                cls.preberi_vir(),
+            )
+
 
 @dataclass
 class Racun(Tabela, Entiteta):
@@ -299,9 +310,9 @@ class Racun(Tabela, Entiteta):
     id_lastnik: int = field(default=None)
     id_paket: int = field(default=None)
     stanje: int = field(default=None)
-    
+
     VIR = "racun.csv"
-    IME = 'racun'
+    IME = "racun"
 
     @classmethod
     def ustvari_tabelo(cls, cur=None):
@@ -327,17 +338,20 @@ class Racun(Tabela, Entiteta):
             cur.execute("""
                 DROP TABLE IF EXISTS racun;
             """)
-    
+
     @classmethod
     def uvozi_podatke(cls, cur=None):
         """
         Uvozi podatke v tabelo "racun".
         """
         with Kazalec(cur) as cur:
-            cur.executemany("""
+            cur.executemany(
+                """
                 INSERT INTO racun (IBAN, id_lastnik, id_paket, stanje)
                 VALUES (:IBAN, :id_lastnik, :id_paket,:stanje);
-            """, cls.preberi_vir())
+            """,
+                cls.preberi_vir(),
+            )
 
 
 @dataclass
@@ -352,9 +366,9 @@ class Transakcija(Tabela, Entiteta):
     tip: str = field(default=None)
     znesek: int = field(default=None)
     cas: str = field(default=None)
-    
+
     VIR = "transakcija.csv"
-    IME = 'transakcija'
+    IME = "transakcija"
 
     @classmethod
     def ustvari_tabelo(cls, cur=None):
@@ -390,7 +404,7 @@ class Transakcija(Tabela, Entiteta):
             cur.execute("""
                 DROP TABLE IF EXISTS transakcija;
             """)
-    
+
     @classmethod
     def uvozi_podatke(cls, cur=None):
         """
@@ -398,17 +412,21 @@ class Transakcija(Tabela, Entiteta):
         """
         with Kazalec(cur) as cur:
             for vrstica in cls.preberi_vir():
-                if vrstica.get('posilja') == 'None':
-                    vrstica['posilja'] = None # popravi zapis iz csv-ja
-                if vrstica.get('prejema') == 'None':
-                    vrstica['prejema'] = None
-                cur.execute("""
+                if vrstica.get("posilja") == "None":
+                    vrstica["posilja"] = None  # popravi zapis iz csv-ja
+                if vrstica.get("prejema") == "None":
+                    vrstica["prejema"] = None
+                cur.execute(
+                    """
                     INSERT INTO transakcija (id_transakcije, posilja, prejema, tip, znesek, cas)
                     VALUES (:id_transakcije, :posilja, :prejema, :tip, :znesek, :cas);
-                """, vrstica)    
-            
+                """,
+                    vrstica,
+                )
+
 
 ##########################################################################################################################################################
+
 
 def ustvari_tabele(cur=None):
     """
@@ -452,6 +470,7 @@ def ustvari_bazo(pobrisi=False, cur=None):
         finally:
             cur.execute("PRAGMA foreign_keys = ON;")
 
+
 def ustvari_prazno_bazo():
     """
     Ustvari vse tabele v bazi 'Banka.db' — brez uvoza podatkov.
@@ -465,4 +484,4 @@ if __name__ == "__main__":
     # Pobriši in ustvari prazno bazo (brez uvoza CSV)
     pobrisi_tabele()
     ustvari_prazno_bazo()
-    print('Uspešno izvedeno!!')
+    print("Uspešno izvedeno!!")
