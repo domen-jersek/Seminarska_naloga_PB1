@@ -259,23 +259,23 @@ def packages():
         {
             'tip': 'Basic',
             'cena': 0,
-            'osnovni_limit': 50000,  # 500 EUR
-            'dnevni_limit': 10000,   # 100 EUR
-            'opis': 'Brezplačen osnovni paket'
+            'transakcijski_limit': 50000,  # 500 EUR
+            'dnevni_limit': 100000,   # 1000 EUR
+            'opis': 'Brezplačen osnovni paket za začetnike'
         },
         {
             'tip': 'Premium',
             'cena': 599,  # 5.99 EUR
-            'osnovni_limit': 500000,  # 5000 EUR
-            'dnevni_limit': 100000,   # 1000 EUR
-            'opis': 'Povečani limiti in dodatne ugodnosti'
+            'transakcijski_limit': 200000,  # 2000 EUR
+            'dnevni_limit': 500000,   # 5000 EUR
+            'opis': 'Napredni paket za aktivne uporabnike'
         },
         {
             'tip': 'Business',
             'cena': 1999,  # 19.99 EUR
-            'osnovni_limit': None,  # Brez limita
+            'transakcijski_limit': None,  # Brez limita
             'dnevni_limit': 1000000,  # 10000 EUR
-            'opis': 'Za podjetja in visoke zneske'
+            'opis': 'Profesionalni paket za podjetja'
         }
     ]
     
@@ -461,13 +461,13 @@ def admin_add_package():
     """Dodaj nov paket"""
     tip = request.form.get('tip')
     cena = request.form.get('cena', '0')
-    osnovni_limit = request.form.get('osnovni_limit', '')
+    transakcijski_limit = request.form.get('transakcijski_limit', '')
     dnevni_limit = request.form.get('dnevni_limit', '0')
     
     try:
         cena_cents = int(float(cena) * 100)
         dnevni_limit_cents = int(float(dnevni_limit) * 100)
-        osnovni_limit_cents = int(float(osnovni_limit) * 100) if osnovni_limit else None
+        osnovni_limit_cents = int(float(transakcijski_limit) * 100) if transakcijski_limit else None
     except ValueError:
         flash('❌ Napačen format zneska', 'danger')
         return redirect(url_for('admin_packages'))
@@ -488,13 +488,13 @@ def admin_edit_package(id_paket):
     """Uredi paket"""
     tip = request.form.get('tip')
     cena = request.form.get('cena', '0')
-    osnovni_limit = request.form.get('osnovni_limit', '')
+    transakcijski_limit = request.form.get('transakcijski_limit', '')
     dnevni_limit = request.form.get('dnevni_limit', '0')
     
     try:
         cena_cents = int(float(cena) * 100)
         dnevni_limit_cents = int(float(dnevni_limit) * 100)
-        osnovni_limit_cents = int(float(osnovni_limit) * 100) if osnovni_limit else None
+        osnovni_limit_cents = int(float(transakcijski_limit) * 100) if transakcijski_limit else None
     except ValueError:
         flash('❌ Napačen format zneska', 'danger')
         return redirect(url_for('admin_packages'))
