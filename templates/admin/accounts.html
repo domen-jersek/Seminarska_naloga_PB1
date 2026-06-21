@@ -27,7 +27,7 @@
                     <tbody>
                         {% for racun in racuni %}
                         <tr>
-                            <td><code>{{ racun.IBAN }}</code></td>
+                            <td><code>{{ racun.IBAN | format_iban }}</code></td>
                             <td>{{ racun.ime_lastnika }} {{ racun.priimek_lastnika }} <small class="text-muted">(ID: {{ racun.id_lastnik }})</small></td>
                             <td><span class="badge bg-info">{{ racun.paket_tip }}</span></td>
                             <td>{{ racun.stanje | centi_v_eure }} €</td>

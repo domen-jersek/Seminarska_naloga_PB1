@@ -33,8 +33,8 @@
                                     {{ trans.tip }}
                                 </span>
                             </td>
-                            <td><small>{{ trans.posilja or '-' }}</small></td>
-                            <td><small>{{ trans.prejema or '-' }}</small></td>
+                            <td><small>{{ trans.posilja | format_iban or '-' }}</small></td>
+                            <td><small>{{ trans.prejema | format_iban or '-' }}</small></td>
                             <td>{{ trans.znesek | centi_v_eure }} €</td>
                             <td><small>{{ trans.cas | format_datum }}</small></td>
                         </tr>

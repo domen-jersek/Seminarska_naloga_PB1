@@ -580,11 +580,19 @@ def centi_v_eure(centi):
 
 @app.template_filter("format_iban")
 def format_iban(iban):
-    """Formatiraj IBAN za prikaz"""
+    """Formatiraj IBAN za prikaz (SI56 2104 1452 2906 738)"""
     if not iban:
         return ""
-    # Že ima presledke
-    return iban
+    
+    # Odstrani vse presledke in neveljavne znake
+    cisti = ''.join(c for c in str(iban) if c.isalnum())
+    
+    if not cisti:
+        return ""
+    
+    # Razdeli po 4 znake
+    deli = [cisti[i:i+4] for i in range(0, len(cisti), 4)]
+    return ' '.join(deli)
 
 
 @app.errorhandler(404)

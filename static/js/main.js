@@ -7,7 +7,7 @@ function formatCurrency(cents) {
 
 // Format IBAN
 function formatIBAN(iban) {
-    return iban.replace(/(.{4})/g, '$1 ').trim();
+    return iban.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
 }
 
 // Show loading spinner

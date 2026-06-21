@@ -124,10 +124,10 @@
                                         {{ trans.cas | format_datum }}
                                     </div>
                                     {% if trans.posilja %}
-                                    <div class="small text-muted">Od: {{ trans.posilja }}</div>
+                                    <div class="small text-muted">Od: {{ trans.posilja | format_iban }}</div>
                                     {% endif %}
                                     {% if trans.prejema %}
-                                    <div class="small text-muted">Za: {{ trans.prejema }}</div>
+                                    <div class="small text-muted">Za: {{ trans.prejema | format_iban }}</div>
                                     {% endif %}
                                 </div>
                                 <div class="text-end">
