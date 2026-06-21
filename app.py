@@ -268,29 +268,7 @@ def withdraw():
 @login_required
 def packages():
     """Pregled paketov"""
-    available_packages = [
-        {
-            "tip": "Basic",
-            "cena": 0,
-            "osnovni_limit": 50000,  # 500 EUR
-            "dnevni_limit": 100000,  # 1000 EUR
-            "opis": "Brezplačen osnovni paket za začetnike",
-        },
-        {
-            "tip": "Premium",
-            "cena": 599,  # 5.99 EUR
-            "osnovni_limit": 200000,  # 2000 EUR
-            "dnevni_limit": 500000,  # 5000 EUR
-            "opis": "Napredni paket za aktivne uporabnike",
-        },
-        {
-            "tip": "Business",
-            "cena": 1999,  # 19.99 EUR
-            "osnovni_limit": None,  # Brez limita
-            "dnevni_limit": 1000000,  # 10000 EUR
-            "opis": "Profesionalni paket za podjetja",
-        },
-    ]
+    available_packages = available_packages = bank.get_all_paketi()
 
     user_id = session["user_id"]
     racuni = bank.get_racuni_stranke(user_id)
