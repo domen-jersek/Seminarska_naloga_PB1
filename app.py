@@ -607,15 +607,25 @@ def internal_error(e):
     return render_template("500.html"), 500
 
 
+# Seznam slovenskih imen mesecev v rodilniku
+SLO_MESECI = {
+    1: "januarja", 2: "februarja", 3: "marca", 4: "aprila",
+    5: "maja", 6: "junija", 7: "julija", 8: "avgusta",
+    9: "septembra", 10: "oktobra", 11: "novembra", 12: "decembra"
+}
+
 @app.template_filter("format_datum")
 def format_datum(datum_str):
-    """Formatiraj datum"""
+    """Formatira datum v bolj berljivo slovensko obliko."""
     if not datum_str:
         return ""
     try:
         dt = datetime.fromisoformat(datum_str.replace(" ", "T"))
-        return dt.strftime("%d.%m.%Y %H:%M")
-    except:
+
+        mesec_beseda = SLO_MESECI[dt.month]
+        return f"{dt.day}. {mesec_beseda} {dt.year} ob {dt.strftime('%H:%M')}"
+        
+    except Exception:
         return datum_str
 
 
