@@ -28,7 +28,9 @@
 
                     {% if racun.paket %}
                     <div class="mb-3">
-                        <small class="text-muted d-block">Dnevni limit:</small>
+                        <small class="text-muted d-block">Limit posamezne transakcije:</small>
+                        <strong>{% if racun.paket.osnovni_limit %}{{ racun.paket.osnovni_limit | centi_v_eure }} €{% else %}Brez{% endif %}</strong>
+                        <small class="text-muted d-block mt-2">Dnevni limit:</small>
                         <strong>{{ racun.paket.dnevni_limit | centi_v_eure }} €</strong>
                     </div>
                     {% endif %}

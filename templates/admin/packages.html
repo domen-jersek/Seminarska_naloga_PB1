@@ -20,7 +20,7 @@
                             <th>ID</th>
                             <th>Tip</th>
                             <th>Cena (€/mesec)</th>
-                            <th>Osnovni limit (€)</th>
+                            <th>Limit posamezne transakcije (€)</th>
                             <th>Dnevni limit (€)</th>
                             <th>Akcije</th>
                         </tr>
@@ -75,7 +75,7 @@
                         <input type="number" class="form-control" name="cena" value="0" min="0" step="0.01" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Osnovni limit (EUR)</label>
+                        <label class="form-label">Limit posamezne transakcije (EUR)</label>
                         <input type="number" class="form-control" name="osnovni_limit" min="0" step="0.01"
                                placeholder="Pustite prazno za brez limita">
                     </div>
@@ -115,7 +115,7 @@
                                value="{{ (paket.cena / 100) if paket.cena else 0 }}" min="0" step="0.01" required>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Osnovni limit (EUR)</label>
+                        <label class="form-label">Limit posamezne transakcije (EUR)</label>
                         <input type="number" class="form-control" name="osnovni_limit" 
                                value="{{ (paket.osnovni_limit / 100) if paket.osnovni_limit else '' }}" 
                                min="0" step="0.01" placeholder="Pustite prazno za brez limita">

@@ -38,9 +38,16 @@
                             <div id="balanceInfo" class="form-text"></div>
                         </div>
 
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Namen plačila / Opis</label>
+                            <input type="text" class="form-control form-control-lg" name="opis" 
+                                   placeholder="Npr. Plačilo položnice, Darilo..." maxlength="100">
+                            <div class="form-text">Kratek opis nakazila (opcijsko)</div>
+                        </div>
+
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle"></i>
-                            <strong>Opomba:</strong> Nakazilo bo izvedeno takoj. Preverite podatke pred potrditvijo.
+                            <strong>Opomba:</strong> Nakazilo bo izvedeno takoj. Pred potrditvijo ponovno preverite podatke.
                         </div>
 
                         <div class="d-grid gap-2">
@@ -87,7 +94,8 @@ document.getElementById('transferForm').addEventListener('submit', async (e) => 
             body: JSON.stringify({
                 from_iban: formData.get('from_iban'),
                 to_iban: formData.get('to_iban'),
-                amount: formData.get('amount')
+                amount: formData.get('amount'),
+                opis: formData.get('opis')
             })
         });
         

@@ -8,7 +8,6 @@
     <div class="row mb-4">
         <div class="col">
             <h1 class="display-5">Dobrodošli, {{ stranka.ime }}!</h1>
-            <p class="text-muted">Pregled vaših računov in transakcij</p>
         </div>
     </div>
 
@@ -19,7 +18,6 @@
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 opacity-75">Skupno stanje</h6>
                     <h2 class="card-title mb-0">{{ total_balance | centi_v_eure }} €</h2>
-                    <small class="opacity-75">Vse račune skupaj</small>
                 </div>
             </div>
         </div>
@@ -28,16 +26,14 @@
                 <div class="card-body">
                     <h6 class="card-subtitle mb-2 opacity-75">Število računov</h6>
                     <h2 class="card-title mb-0">{{ racuni | length }}</h2>
-                    <small class="opacity-75">Aktivni računi</small>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card bg-info text-white shadow">
                 <div class="card-body">
-                    <h6 class="card-subtitle mb-2 opacity-75">Zadnje transakcije</h6>
+                    <h6 class="card-subtitle mb-2 opacity-75">Nedavne transakcije</h6>
                     <h2 class="card-title mb-0">{{ recent_transactions | length }}</h2>
-                    <small class="opacity-75">V zadnjem času</small>
                 </div>
             </div>
         </div>
@@ -59,7 +55,6 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <h6 class="mb-1">{{ racun.IBAN | format_iban }}</h6>
-                                    <small class="text-muted">Transakcijski račun</small>
                                 </div>
                                 <div class="text-end">
                                     <strong class="fs-5">{{ racun.stanje | centi_v_eure }} €</strong>
@@ -71,7 +66,7 @@
                         {% if racuni | length == 0 %}
                         <div class="list-group-item text-center text-muted py-4">
                             <i class="bi bi-inbox fs-1"></i>
-                            <p class="mt-2 mb-0">Nimate računov</p>
+                            <p class="mt-2 mb-0">Nimate še nobenega računa</p>
                         </div>
                         {% endif %}
                     </div>
@@ -128,10 +123,13 @@
                                         {{ trans.cas | format_datum }}
                                     </div>
                                     {% if trans.posilja %}
-                                    <div class="small text-muted">Od: {{ trans.posilja }}</div>
+                                    <div class="small text-muted">Od: {{ trans.posilja | format_iban }}</div>
                                     {% endif %}
                                     {% if trans.prejema %}
-                                    <div class="small text-muted">Za: {{ trans.prejema }}</div>
+                                    <div class="small text-muted">Za: {{ trans.prejema | format_iban }}</div>
+                                    {% endif %}
+                                    {% if trans.opis %}
+                                    <div class="small text-dark fw-semibold mt-1">Namen: {{ trans.opis }}</div>
                                     {% endif %}
                                 </div>
                                 <div class="text-end">

@@ -6,6 +6,15 @@
 <div class="container my-4">
     <h1 class="mb-4"><i class="bi bi-arrow-left-right"></i> Vse transakcije</h1>
 
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Išči po transakcijah (ID, tip, račun, znesek, namen)...">
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -17,6 +26,7 @@
                             <th>Pošiljatelj</th>
                             <th>Prejemnik</th>
                             <th>Znesek</th>
+                            <th>Namen / Opis</th>
                             <th>Čas</th>
                         </tr>
                     </thead>
@@ -33,9 +43,10 @@
                                     {{ trans.tip }}
                                 </span>
                             </td>
-                            <td><small>{{ trans.posilja or '-' }}</small></td>
-                            <td><small>{{ trans.prejema or '-' }}</small></td>
+                            <td><small>{{ trans.posilja | format_iban or '-' }}</small></td>
+                            <td><small>{{ trans.prejema | format_iban or '-' }}</small></td>
                             <td>{{ trans.znesek | centi_v_eure }} €</td>
+                            <td><small class="text-muted">{{ trans.opis or '-' }}</small></td>
                             <td><small>{{ trans.cas | format_datum }}</small></td>
                         </tr>
                         {% endfor %}
@@ -45,4 +56,17 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const query = this.value.toLowerCase();
+    const rows = document.querySelectorAll('table tbody tr');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}

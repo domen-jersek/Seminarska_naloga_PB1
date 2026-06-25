@@ -24,7 +24,14 @@
                     {% if paket %}
                     <div class="mb-3">
                         <span class="badge bg-primary">{{ paket.tip }}</span>
-                        <small class="text-muted ms-2">
+                        <small class="text-muted ms-2 d-block mt-2">
+                            {% if paket.osnovni_limit %}
+                            Limit posamezne transakcije: {{ paket.osnovni_limit | centi_v_eure }} €
+                            {% else %}
+                            Limit posamezne transakcije: brez
+                            {% endif %}
+                        </small>
+                        <small class="text-muted ms-2 d-block">
                             Dnevni limit: {{ paket.dnevni_limit | centi_v_eure }} €
                         </small>
                     </div>
@@ -36,7 +43,7 @@
         <div class="col-md-4">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h6 class="card-title">Hitri akcije</h6>
+                    <h6 class="card-title">Hitre akcije</h6>
                     <div class="d-grid gap-2">
                         <button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#depositModal">
                             <i class="bi bi-plus-circle"></i> Polog
@@ -83,11 +90,14 @@
                             <td>
                                 <small>
                                 {% if trans.posilja and trans.posilja != racun.IBAN %}
-                                    Od: {{ trans.posilja }}
+                                    Od: {{ trans.posilja | format_iban }}
                                 {% elif trans.prejema and trans.prejema != racun.IBAN %}
-                                    Za: {{ trans.prejema }}
+                                    Za: {{ trans.prejema | format_iban }}
                                 {% else %}
                                     -
+                                {% endif %}
+                                {% if trans.opis %}
+                                    <div class="text-dark fw-semibold mt-1">Namen: {{ trans.opis }}</div>
                                 {% endif %}
                                 </small>
                             </td>

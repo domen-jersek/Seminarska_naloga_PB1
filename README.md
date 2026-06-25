@@ -1,360 +1,136 @@
-# 🏦 Slovenia Bank - Bančni Sistem
+# Slovenia Bank - bančni sistem
 
-Seminarska naloga za predmet Podatkovne Baze 1 (PB1).
+Seminarska naloga za predmet Podatkovne baze 1 (PB1).
 
-Popolnoma funkcionalen bančni sistem z modernim spletnim vmesnikom (frontend) in zaledjem (backend) za upravljanje računov, transakcij, paketov in strank.
+Aplikacija omogoča delo z bančnimi strankami, računi, paketi in transakcijami prek spletnega vmesnika in tekstovnega vmesnika (CLI). Podatki so shranjeni v SQLite bazi `Banka.db`.
 
----
+## Funkcionalnosti
 
-## 📋 Vsebina
+**Stranka**
+- prijava z uporabniškim imenom in geslom,
+- pregled računov, stanja in zadnjih transakcij,
+- nakazilo na drug račun,
+- polog in dvig,
+- pregled bančnih paketov.
 
-- [Značilnosti](#-značilnosti)
-- [Tehnologije](#-tehnologije)
-- [Namestitev](#-namestitev)
-- [Zagon aplikacije](#-zagon-aplikacije)
-- [Uporaba](#-uporaba)
-- [Struktura projekta](#-struktura-projekta)
-- [API Endpoints](#-api-endpoints)
-- [Podatkovni model](#-podatkovni-model)
+**Administrator**
+- pregled strank, računov, paketov in transakcij,
+- dodajanje, urejanje in brisanje strank,
+- dodajanje, brisanje in spreminjanje paketov računov,
+- dodajanje in brisanje računov,
+- urejanje paketov.
 
----
+**Preverjanja in omejitve**
+- preverjanje prijave in pravic dostopa,
+- preverjanje lastništva računov pri uporabniških akcijah,
+- preverjanje pozitivnih zneskov,
+- preverjanje zadostnega stanja,
+- dnevni limit za nakazila in dvige,
+- limit posamezne transakcije glede na paket,
+- preverjanje slovenskega IBAN-a po standardu ISO 7064 Mod 97-10,
+- preverjanje datuma rojstva pri dodajanju ali urejanju stranke.
 
-## ✨ Značilnosti
+## Tehnologije
 
-### Uporabniške funkcionalnosti
-- 🔐 **Prijava** - Enostavna prijava z uporabniškim imenom in geslom stranke
-- 📊 **Nadzorna plošča** - Pregled vseh računov in stanja
-- 💳 **Upravljanje računov** - Pregled detajlov računa in zgodovine transakcij
-- 💸 **Nakazila** - Prenos denarja med računi
-- 💰 **Pologi in dvigi** - Dodajanje ali dvig denarja
-- 📦 **Bančni paketi** - Različni paketi z različnimi limiti
-- 🔄 **Zgodovina transakcij** - Popoln pregled vseh transakcij
+- Python 3
+- Flask
+- SQLite
+- Bootstrap
+- JavaScript
 
-### Admin funkcionalnosti
-- 📈 **Admin dashboard** - Statistika in pregled sistema
-- 👥 **Upravljanje strank** - Pregled vseh strank in njihovih računov
-- 📝 **Pregled transakcij** - Vse transakcije v sistemu
-- 📊 **Statistika** - Številke in analitika poslovanja
-
-### Varnostne funkcionalnosti
-- ✅ Preverjanje lastništva računov
-- ✅ Dnevni limiti transakcij
-- ✅ Preverjanje zadostnih sredstev
-- ✅ Validacija IBAN številk
-- ✅ Session management
-
----
-
-## 🛠 Tehnologije
-
-### Backend
-- **Python 3.8+**
-- **Flask 3.0** - Web framework
-- **SQLite3** - Relacijska baza podatkov
-- **Werkzeug** - WSGI utilities
-
-### Frontend
-- **HTML5/CSS3**
-- **Bootstrap 5.3** - Responsive design
-- **Bootstrap Icons** - Ikone
-- **JavaScript (Vanilla)** - Interaktivnost
-- **Fetch API** - AJAX calls
-
----
-
-## 📥 Namestitev
-
-### 1. Klonirajte repozitorij ali prenesite datoteke
-
-
-### 2. Namestite potrebne Python pakete
+## Namestitev in zagon
 
 ```powershell
 pip install -r requirements.txt
-```
-
-### 3. Ustvarite bazo podatkov
-
-Če baza `Banka.db` še ne obstaja, jo ustvarite:
-
-```powershell
 python model.py
+python generate_demo_data.py
+python app.py
 ```
 
-To bo ustvarilo prazno bazo z vsemi tabelami.
+Spletna aplikacija je dostopna na `http://localhost:5000`.
 
-### 4. Generirajte testne podatke (opcijsko)
-
-Če želite generirati testne podatke strank, računov in transakcij:
+Tekstovni vmesnik zaženete z:
 
 ```powershell
+python cli.py
+```
+
+## Prijava v demo okolje
+
+Po zagonu `generate_demo_data.py` sta na voljo vsaj naslednja uporabnika:
+
+| Vloga | Uporabniško ime | Geslo |
+| --- | --- | --- |
+| Administrator | `admin` | `admin123` |
+| Stranka | `marko.novak` | `geslo123` |
+
+Če bazo izbrišete ali ponovno ustvarite, je treba ponovno zagnati `python generate_demo_data.py`, da se ustvarijo demo stranke, računi, paketi, transakcije in uporabniški računi.
+
+## Uporaba
+
+**Nakazilo**
+1. Prijavite se kot stranka.
+2. Odprite stran **Nakazilo**.
+3. Izberite račun pošiljatelja.
+4. Vnesite IBAN prejemnika, znesek in po želji namen plačila.
+5. Potrdite nakazilo.
+
+**Polog ali dvig**
+1. Na nadzorni plošči ali podrobnostih računa izberite polog oziroma dvig.
+2. Izberite račun.
+3. Vnesite znesek.
+4. Potrdite transakcijo.
+
+**Administracija**
+1. Prijavite se kot `admin`.
+2. V administratorskem delu urejate stranke, račune, pakete in pregledujete transakcije.
+3. Pri dodajanju stranke lahko ustvarite tudi uporabniški račun za spletno prijavo.
+
+## Struktura projekta
+
+```text
+SN/
+├── app.py                 # Flask aplikacija in spletne poti
+├── cli.py                 # Tekstovni vmesnik
+├── model.py               # Ustvarjanje podatkovnega modela
+├── services.py            # Poslovna logika za uporabnike, stranke, račune, pakete in transakcije
+├── generate_demo_data.py  # Ustvari demo podatke
+├── requirements.txt       # Python odvisnosti
+├── templates/             # HTML predloge
+├── static/                # CSS in JavaScript
+└── Banka.db               # SQLite baza
+```
+
+Datoteka `generacijaPodatkov.py` ni več del projekta. Nadomešča jo `generate_demo_data.py`, ki ustvari demo podatke, skladne s trenutno shemo in validacijo IBAN-ov.
+
+## Podatkovni model
+
+Glavne tabele:
+
+- `stranka`: osebni podatki stranke,
+- `uporabnik`: podatki za prijavo in vloga,
+- `racun`: IBAN, lastnik, paket in stanje,
+- `paket`: cena, dnevni limit in limit posamezne transakcije,
+- `transakcija`: pologi, dvigi, nakazila in opis transakcije.
+
+Zneski so v bazi shranjeni v centih. IBAN je shranjen brez presledkov, v vmesnikih pa se prikaže v skupinah po štiri znake.
+
+## Brisanje podatkov
+
+Ob izbrisu stranke se izbrišejo tudi njen uporabniški račun, računi in transakcije, ki so povezane z njenimi računi. Enako se ob izbrisu posameznega računa izbrišejo transakcije tega računa. Ta pristop ohranja referenčno integriteto v trenutnem modelu, vendar izbriše tudi transakcije, kjer je sodeloval račun druge stranke.
+
+## Odpravljanje težav
+
+Če želite bazo ustvariti znova:
+
+```powershell
+Remove-Item Banka.db
+python model.py
 python generate_demo_data.py
 ```
 
----
+Če so vrata 5000 zasedena, v zadnji vrstici `app.py` spremenite parameter `port`.
 
-## 🚀 Zagon aplikacije
+## Namen
 
-### Zagon Flask strežnika
-
-```powershell
-python app.py
-```
-
-Aplikacija bo dostopna na: **http://localhost:5000**
-
-### Alternativa - Debug način
-
-Za development mode z avtomatskim reloadom:
-
-```powershell
-$env:FLASK_APP="app.py"
-$env:FLASK_ENV="development"
-flask run
-```
-
----
-
-## 💻 Uporaba
-
-### Prijava kot stranka
-
-1. Odprite **http://localhost:5000** v brskalniku
-2. Vnesite **ID stranke** (npr. `1`, `2`, `3`, ...)
-3. Kliknite **Prijava**
-
-### Prijava kot administrator
-
-1. Odprite **http://localhost:5000**
-2. Vnesite `admin` kot ID
-3. Dostop do admin panela
-
-### Primeri uporabe
-
-#### Prenos denarja
-1. Pojdite na **Nakazilo**
-2. Izberite račun pošiljatelja
-3. Vnesite IBAN prejemnika
-4. Vnesite znesek
-5. Kliknite **Izvedi nakazilo**
-
-#### Polog ali dvig
-1. Na **Nadzorni plošči** kliknite **Polog** ali **Dvig**
-2. Izberite račun
-3. Vnesite znesek
-4. Potrdite
-
----
-
-## 📁 Struktura projekta
-
-```
-SN/
-│
-├── app.py                      # Glavna Flask aplikacija
-├── model.py                    # Podatkovni model in ORM
-├── services.py                 # Poslovna logika in storitve
-├── generacijaPodatkov.py       # Generator testnih podatkov
-├── requirements.txt            # Python odvisnosti
-├── README.md                   # Ta dokument
-│
-├── Banka.db                    # SQLite baza podatkov
-│
-├── templates/                  # HTML predloge (Jinja2)
-│   ├── base.html              # Osnovna predloga
-│   ├── login.html             # Prijava
-│   ├── dashboard.html         # Nadzorna plošča
-│   ├── accounts.html          # Seznam računov
-│   ├── account_detail.html    # Detajli računa
-│   ├── transfer.html          # Nakazilo
-│   ├── packages.html          # Bančni paketi
-│   │
-│   └── admin/                 # Admin predloge
-│       ├── dashboard.html     # Admin nadzorna plošča
-│       ├── customers.html     # Seznam strank
-│       └── transactions.html  # Seznam transakcij
-│
-└── static/                     # Statične datoteke
-    ├── css/
-    │   └── style.css          # CSS stili
-    └── js/
-        └── main.js            # JavaScript
-```
-
----
-
-## 🔌 API Endpoints
-
-### Javni endpoints
-- `GET /` - Domača stran (redirect)
-- `GET/POST /login` - Prijava
-- `GET /logout` - Odjava
-
-### Uporabniški endpoints (zaščiteno)
-- `GET /dashboard` - Nadzorna plošča
-- `GET /accounts` - Seznam računov
-- `GET /account/<iban>` - Detajli računa
-- `GET/POST /transfer` - Nakazilo
-- `POST /deposit` - Polog
-- `POST /withdraw` - Dvig
-- `GET /packages` - Bančni paketi
-
-### Admin endpoints (admin zaščita)
-- `GET /admin` - Admin dashboard
-- `GET /admin/customers` - Seznam strank
-- `GET /admin/transactions` - Seznam transakcij
-
-### API endpoints
-- `GET /api/account/<iban>/balance` - Stanje računa
-
----
-
-## 🗄 Podatkovni model
-
-### Tabele
-
-#### `stranka`
-- `id_stranke` (PRIMARY KEY)
-- `ime`
-- `priimek`
-- `naslov`
-- `datum_rojstva`
-
-#### `racun`
-- `IBAN` (PRIMARY KEY, 34 znakov)
-- `id_lastnik` (FOREIGN KEY → stranka)
-- `stanje` (v centih)
-
-#### `paket`
-- `id_paket` (PRIMARY KEY)
-- `id_racuna` (FOREIGN KEY → racun)
-- `tip` (Basic, Premium, Business)
-- `cena` (v centih)
-- `osnovni_limit` (v centih)
-- `dnevni_limit` (v centih)
-
-#### `transkacija`
-- `id_transakcije` (PRIMARY KEY)
-- `posilja` (FOREIGN KEY → racun, NULL za polog)
-- `prejema` (FOREIGN KEY → racun, NULL za dvig)
-- `tip` (polog, dvig, nakazilo, obresti)
-- `znesek` (v centih)
-- `cas` (DATETIME)
-
-### Omejitve (Constraints)
-- IBAN mora biti natanko 34 znakov
-- Ime, priimek, naslov ne smejo biti prazni
-- Znesek mora biti pozitiven
-- Tip transakcije mora biti veljaven
-- Polog: `posilja = NULL`, `prejema ≠ NULL`
-- Dvig: `posilja ≠ NULL`, `prejema = NULL`
-- Nakazilo: `posilja ≠ NULL`, `prejema ≠ NULL`, `posilja ≠ prejema`
-
----
-
-
-## 🔒 Varnost
-
-### Implementirane funkcije
-- Session management s Flask sessions
-- Login required decorators
-- Admin required decorators
-- Preverjanje lastništva računov
-- Validacija vnosnih podatkov
-- SQL injection zaščita (parametrizirane poizvedbe)
-- CSRF zaščita (preko Flask session)
-
-
-## 🧪 Testiranje
-
-### Testni podatki
-
-Če uporabljate `generacijaPodatkov.py`, dobite:
-- Naključne stranke s slovenskimi imeni in priimki
-- IBAN račune v slovenskem formatu
-- Različna stanja računov (Pareto distribucija)
-- Testne transakcije
-
-### Primer testne prijave
-```
-ID stranke: 1
-ID stranke: 2
-ID stranke: 3
-...
-Admin: admin
-```
-
----
-
-## 📊 Funkcionalnosti po modulih
-
-### `app.py` - Flask aplikacija
-- Routing in view funkcije
-- Session management
-- Template rendering
-- Error handling
-- Template filters (centi_v_eure, format_iban, format_datum)
-
-### `services.py` - Poslovna logika
-- `BankService` class
-- CRUD operacije za stranke, račune, pakete
-- Transakcijske funkcije (transfer, deposit, withdrawal)
-- Validacija in preverjanje limitov
-- Admin statistika
-
-### `model.py` - Podatkovni model
-- Definicije tabel (dataclass)
-- Ustvarjanje in brisanje tabel
-- Uvoz podatkov iz CSV
-- Kazalec (cursor) management
-- Foreign keys omogočeni
-
----
-
-## 🐛 Troubleshooting
-
-### Baza se ne ustvari
-```powershell
-# Pobrišite staro bazo in ustvarite novo
-Remove-Item Banka.db
-python model.py
-```
-
-### Port 5000 je zaseden
-```powershell
-# Uporabite drug port
-python app.py --port 5001
-```
-
-Ali v `app.py` spremenite:
-```python
-app.run(debug=True, host='0.0.0.0', port=5001)
-```
-
-### Napaka pri importu modula
-```powershell
-# Preverite Python pot
-$env:PYTHONPATH="."
-python app.py
-```
-
----
-
-## 📝 Razvoj
-
-### Dodajanje nove funkcionalnosti
-
-1. **Backend** - Dodajte route v `app.py`
-2. **Service** - Dodajte metodo v `services.py`
-3. **Frontend** - Ustvarite/posodobite template
-4. **Styling** - Dodajte CSS v `style.css`
-5. **JavaScript** - Dodajte logiko v `main.js`
-
-
-## 📄 Licenca
-
-Projekt je namenjen za izobraževalne namene v okviru predmeta PB1.
-
----
-
-**Uživajte v uporabi Slovenia Bank sistema! 🏦**
+Projekt je pripravljen za izobraževalni namen pri predmetu PB1.

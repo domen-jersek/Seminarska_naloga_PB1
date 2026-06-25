@@ -11,6 +11,15 @@
         </button>
     </div>
 
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                <input type="text" id="searchInput" class="form-control border-start-0 ps-0" placeholder="Išči po računih (IBAN, lastnik, paket)...">
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="table-responsive">
@@ -27,7 +36,7 @@
                     <tbody>
                         {% for racun in racuni %}
                         <tr>
-                            <td><code>{{ racun.IBAN }}</code></td>
+                            <td><code>{{ racun.IBAN | format_iban }}</code></td>
                             <td>{{ racun.ime_lastnika }} {{ racun.priimek_lastnika }} <small class="text-muted">(ID: {{ racun.id_lastnik }})</small></td>
                             <td><span class="badge bg-info">{{ racun.paket_tip }}</span></td>
                             <td>{{ racun.stanje | centi_v_eure }} €</td>
@@ -80,7 +89,7 @@
                         <select class="form-select" name="id_paket" required>
                             {% for paket in paketi %}
                             <option value="{{ paket.id_paket }}">
-                                {{ paket.tip }} ({{ paket.cena | centi_v_eure }} €/mesec)
+                                {{ paket.tip }} ({{ paket.cena | centi_v_eure }} €/mesec, limit posamezne transakcije: {% if paket.osnovni_limit %}{{ paket.osnovni_limit | centi_v_eure }} €{% else %}brez{% endif %}, dnevni limit: {{ paket.dnevni_limit | centi_v_eure }} €)
                             </option>
                             {% endfor %}
                         </select>
@@ -120,7 +129,8 @@
                         <select class="form-select" name="id_paket" required>
                             {% for paket in paketi %}
                             <option value="{{ paket.id_paket }}" {% if paket.id_paket == racun.id_paket %}selected{% endif %}>
-                                {{ paket.tip }} ({{ paket.cena | centi_v_eure }} €/mesec, 
+                                {{ paket.tip }} ({{ paket.cena | centi_v_eure }} €/mesec,
+                                limit posamezne transakcije: {% if paket.osnovni_limit %}{{ paket.osnovni_limit | centi_v_eure }} €{% else %}brez{% endif %},
                                 dnevni limit: {{ paket.dnevni_limit | centi_v_eure }} €)
                             </option>
                             {% endfor %}
@@ -164,4 +174,17 @@
     </div>
 </div>
 {% endfor %}
+
+{% block extra_js %}
+<script>
+document.getElementById('searchInput').addEventListener('keyup', function() {
+    const query = this.value.toLowerCase();
+    const rows = document.querySelectorAll('table tbody tr');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        row.style.display = text.includes(query) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
 {% endblock %}
